@@ -1,0 +1,30 @@
+IMPORTANT - BEFORE RUNNING GEOATTEND
+
+1. Make sure Python is installed.
+
+2. Open the project in PyCharm.
+
+3. Open the PyCharm Terminal and install Flask:
+
+pip install flask
+
+4. Run app.py to start GeoAttend.
+
+5. Do not delete or rename:
+- GeoAttend.sqlite
+- database.py
+- app.py
+
+GITHUB WORKFLOW
+
+Before starting work:
+
+git pull
+
+When finished:
+
+git add .
+git commit -m "Describe what you changed"
+git push
+
+If Git gives you an error or merge conflict, ask before deleting or overwriting anything.
