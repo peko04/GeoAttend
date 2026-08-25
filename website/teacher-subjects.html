@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Teacher Subjects</title>
+    <link rel="stylesheet" href="geoattend.css">
+</head>
+
+<body class="dashboard-body">
+
+    <header class="top-header">
+        <a class="logo" href="./teacher-subjects.html">GeoAttend</a>
+
+        <nav class="navigation">
+            <a href="#subjects">Subjects</a>
+            <a href="./teacher-attendance.html">Attendance</a>
+            <a href="#reports">Reports</a>
+            <a href="./teacher-login.html">Logout</a>
+        </nav>
+    </header>
+
+    <main class="teacher-subject-page" id="subjects">
+        <h1>Choose a Subject</h1>
+
+        <section class="subject-grid">
+
+            <button class="subject-card" type="button" data-code="COMP301" data-name="Data Structures"
+                onclick="chooseSubject(this)">
+                <strong>COMP301</strong>
+                <span>Data Structures</span>
+            </button>
+
+            <button class="subject-card" type="button" data-code="WEB210" data-name="Web Development"
+                onclick="chooseSubject(this)">
+                <strong>WEB210</strong>
+                <span>Web Development</span>
+            </button>
+
+            <button class="subject-card" type="button" data-code="DATA200" data-name="Database Systems"
+                onclick="chooseSubject(this)">
+                <strong>DATA200</strong>
+                <span>Database Systems</span>
+            </button>
+
+        </section>
+
+        <p class="selection-message" id="selectionMessage">
+            No subject selected
+        </p>
+
+        <button class="main-button teacher-button start-attendance-button" type="button" onclick="startAttendance()">
+            Start Attendance Session
+        </button>
+
+        <section class="report-card" id="reports">
+            <h2>Reports</h2>
+            <p>
+                Attendance reports and export options will be added
+                during backend development.
+            </p>
+        </section>
+    </main>
+
+    <script>
+        let selectedCode = "";
+        let selectedName = "";
+
+        function chooseSubject(button) {
+            const cards = document.querySelectorAll(".subject-card");
+
+            cards.forEach(function (card) {
+                card.classList.remove("selected");
+            });
+
+            button.classList.add("selected");
+
+            selectedCode = button.dataset.code;
+            selectedName = button.dataset.name;
+
+            document.getElementById("selectionMessage").textContent =
+                "Selected: " + selectedCode + " - " + selectedName;
+        }
+
+        function startAttendance() {
+            if (selectedCode === "") {
+                alert("Please choose a subject first.");
+                return;
+            }
+
+            localStorage.setItem("subjectCode", selectedCode);
+            localStorage.setItem("subjectName", selectedName);
+
+            window.location.href = "./teacher-attendance.html";
+        }
+    </script>
+
+</body>
+
+</html>
