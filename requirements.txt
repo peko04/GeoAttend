@@ -6,7 +6,11 @@ IMPORTANT - BEFORE RUNNING GEOATTEND
 
 3. Open the PyCharm Terminal and install Flask:
 
+windows
 pip install flask
+
+mac
+python3 -m pip install flask
 
 4. Run app.py to start GeoAttend.
 
