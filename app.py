@@ -36,17 +36,32 @@ def home():
 @app.route("/login", methods=["POST"])
 def login():
 
-    # Nathan:
-    # 1. Receive email and password from frontend
-    # 2. Use get_user_by_email()
-    # 3. Check password
-    # 4. Check user role
-    # 5. Return correct dashboard / response
+    email = request.form.get("email")
+    password = request.form.get("password")
+    portal = request.form.get("portal")
 
-    return jsonify({
-        "message": "Login route not implemented yet"
-    })
+    user = get_user_by_email(email)
 
+    if user is None:
+        return "Incorrect email or password", 401
+
+    if not check_password_hash(user["password_hash"], password):
+        return "Incorrect email or password", 401
+
+    if user["role"] != portal:
+        return "You are using the wrong login portal", 403
+
+    session["user_id"] = user["user_id"]
+    session["name"] = user["name"]
+    session["role"] = user["role"]
+
+    if user["role"] == "student":
+        return redirect(url_for("student_page"))
+
+    if user["role"] == "teacher":
+        return redirect(url_for("teacher_page"))
+
+    return "Invalid account role", 403
 
 # =========================================================
 # STUDENT DASHBOARD
