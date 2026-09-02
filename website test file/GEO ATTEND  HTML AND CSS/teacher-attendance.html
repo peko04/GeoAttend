@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Teacher Attendance Session</title>
+    <link rel="stylesheet" href="geoattend.css">
+</head>
+
+<body class="dashboard-body">
+
+    <header class="top-header">
+        <a class="logo" href="./teacher-subjects.html">GeoAttend</a>
+
+        <p class="current-subject" id="currentSubject">
+            COMP301 - Data Structures
+        </p>
+
+        <nav class="navigation">
+            <a href="./teacher-subjects.html">Subjects</a>
+            <a href="./teacher-login.html">Logout</a>
+        </nav>
+    </header>
+
+    <main class="attendance-session-page">
+        <section class="session-controls">
+
+            <div class="qr-code" aria-label="Demonstration QR code">
+                <span class="qr-square square-one"></span>
+                <span class="qr-square square-two"></span>
+                <span class="qr-square square-three"></span>
+                <span class="qr-pattern"></span>
+            </div>
+
+            <div class="session-information">
+                <p>
+                    Session status:
+                    <strong id="sessionStatus" class="not-started">
+                        Not Started
+                    </strong>
+                </p>
+
+                <p id="sessionTime">Waiting for session to start</p>
+            </div>
+
+            <div class="session-buttons">
+                <button id="startButton" class="session-button start-session" type="button" onclick="startSession()">
+                    Start Session
+                </button>
+
+                <button id="endButton" class="session-button end-session" type="button" onclick="endSession()" disabled>
+                    End Session
+                </button>
+            </div>
+
+        </section>
+
+        <section class="attendance-list">
+            <h2>Live Student Attendance</h2>
+
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Student</th>
+                            <th>Time</th>
+                            <th>GPS</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        <tr>
+                            <td>John Smith</td>
+                            <td>10:15 AM</td>
+                            <td>-33.8842, 151.2003</td>
+                            <td class="present">Present</td>
+                        </tr>
+
+                        <tr>
+                            <td>Sarah Johnson</td>
+                            <td>10:16 AM</td>
+                            <td>-33.8841, 151.2005</td>
+                            <td class="late">Late</td>
+                        </tr>
+
+                        <tr>
+                            <td>Michael Brown</td>
+                            <td>10:17 AM</td>
+                            <td>-33.8843, 151.2002</td>
+                            <td class="present">Present</td>
+                        </tr>
+
+                        <tr>
+                            <td>Emily Davis</td>
+                            <td>—</td>
+                            <td>Not verified</td>
+                            <td class="absent">Absent</td>
+                        </tr>
+
+                        <tr>
+                            <td>David Wilson</td>
+                            <td>10:19 AM</td>
+                            <td>-33.8840, 151.2004</td>
+                            <td class="present">Present</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        const savedCode =
+            localStorage.getItem("subjectCode") || "COMP301";
+
+        const savedName =
+            localStorage.getItem("subjectName") || "Data Structures";
+
+        document.getElementById("currentSubject").textContent =
+            savedCode + " - " + savedName;
+
+        function startSession() {
+            const currentTime = new Date().toLocaleTimeString([], {
+                hour: "2-digit",
+                minute: "2-digit"
+            });
+
+            const status = document.getElementById("sessionStatus");
+
+            status.textContent = "Active";
+            status.className = "active-session";
+
+            document.getElementById("sessionTime").textContent =
+                "Session started at " + currentTime;
+
+            document.getElementById("startButton").disabled = true;
+            document.getElementById("endButton").disabled = false;
+        }
+
+        function endSession() {
+            const currentTime = new Date().toLocaleTimeString([], {
+                hour: "2-digit",
+                minute: "2-digit"
+            });
+
+            const status = document.getElementById("sessionStatus");
+
+            status.textContent = "Ended";
+            status.className = "ended-session";
+
+            document.getElementById("sessionTime").textContent =
+                "Session ended at " + currentTime;
+
+            document.getElementById("endButton").disabled = true;
+        }
+    </script>
+
+</body>
+
+</html>

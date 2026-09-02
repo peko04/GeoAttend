@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>GeoAttend Teacher Login</title>
+    <link rel="stylesheet" href="geoattend.css">
+</head>
+
+<body class="login-body">
+
+    <main class="login-page">
+        <h1 class="page-title">Teacher Login</h1>
+
+        <section class="login-card">
+            <header class="login-header">GeoAttend</header>
+
+            <form class="login-form" action="./teacher-subjects.html">
+                <div class="form-row">
+                    <label for="teacherEmail">Email</label>
+
+                    <input type="email" id="teacherEmail" required>
+                </div>
+
+                <div class="form-row">
+                    <label for="teacherPassword">Password</label>
+
+                    <input type="password" id="teacherPassword" minlength="4" required>
+                </div>
+
+                <button class="main-button teacher-button" type="submit">
+                    Login
+                </button>
+
+                <p class="portal-name teacher-text">Teacher Portal</p>
+            </form>
+        </section>
+
+        <div class="switch-portal">
+            <a class="student-portal-button" href="./student-login.html">
+                Back to Student Portal
+            </a>
+        </div>
+    </main>
+
+</body>
+
+</html>
