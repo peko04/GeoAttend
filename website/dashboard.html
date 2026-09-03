@@ -3,49 +3,173 @@
 
 <head>
     <meta charset="UTF-8">
+
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>GeoAttend Student Login</title>
+    <title>Student Dashboard</title>
+
     <link rel="stylesheet" href="geoattend.css">
 </head>
 
-<body class="login-body">
+<body class="dashboard-body">
 
-    <main class="login-page">
-        <h1 class="page-title">Student Login</h1>
+    <header class="top-header">
+        <a class="logo" href="./dashboard.html">
+            GeoAttend
+        </a>
 
-        <section class="login-card">
-            <header class="login-header">GeoAttend</header>
+        <nav class="navigation">
+            <a href="#dashboard">Dashboard</a>
 
-            <form class="login-form" action="./dashboard.html">
-                <div class="form-row">
-                    <label for="studentEmail">Email</label>
+            <a href="#" id="scanNavigation">
+                Scan Attendance
+            </a>
 
-                    <input type="email" id="studentEmail" required>
-                </div>
+            <a href="#history">History</a>
 
-                <div class="form-row">
-                    <label for="studentPassword">Password</label>
+            <a href="./student-login.html">
+                Logout
+            </a>
+        </nav>
+    </header>
 
-                    <input type="password" id="studentPassword" minlength="4" required>
-                </div>
+    <main class="student-dashboard" id="dashboard">
 
-                <button class="main-button student-button" type="submit">
-                    Login
-                </button>
+        <section class="student-left">
 
-                <p class="portal-name student-text">Student Portal</p>
-            </form>
+            <article class="blue-card">
+                <h2>Attendance</h2>
+
+                <p class="percentage" id="attendancePercentage">
+                    82%
+                </p>
+            </article>
+
+            <button class="blue-card scan-button" id="openScannerButton" type="button">
+                <span class="scan-symbol">▣</span>
+                <span>Scan QR Code</span>
+            </button>
+
         </section>
 
-        <div class="switch-portal">
-            <p>Are you a teacher?</p>
+        <section class="student-right">
 
-            <a class="teacher-portal-button" href="./teacher-login.html">
-                Teacher Portal
-            </a>
-        </div>
+            <article class="content-card">
+                <h2>Attendance Overview</h2>
+
+                <div class="chart">
+
+                    <div class="chart-item">
+                        <div class="bar green-bar bar-90"></div>
+                        <span>Mon</span>
+                    </div>
+
+                    <div class="chart-item">
+                        <div class="bar green-bar bar-75"></div>
+                        <span>Tue</span>
+                    </div>
+
+                    <div class="chart-item">
+                        <div class="bar orange-bar bar-65"></div>
+                        <span>Wed</span>
+                    </div>
+
+                    <div class="chart-item">
+                        <div class="bar red-bar bar-40"></div>
+                        <span>Thu</span>
+                    </div>
+
+                    <div class="chart-item">
+                        <div class="bar green-bar bar-82"></div>
+                        <span>Fri</span>
+                    </div>
+
+                </div>
+            </article>
+
+            <article class="content-card" id="history">
+                <h2>Recent Attendance</h2>
+
+                <div class="table-container">
+                    <table>
+
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Time</th>
+                                <th>Course</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+
+                        <tbody id="attendanceTableBody">
+
+                            <tr>
+                                <td>May 16, 2025</td>
+                                <td>10:15 AM</td>
+                                <td>COMP1007</td>
+                                <td class="present">Present</td>
+                            </tr>
+
+                            <tr>
+                                <td>May 15, 2025</td>
+                                <td>10:15 AM</td>
+                                <td>COMP2008</td>
+                                <td class="late">Late</td>
+                            </tr>
+
+                            <tr>
+                                <td>May 14, 2025</td>
+                                <td>10:15 AM</td>
+                                <td>COMP2015</td>
+                                <td class="absent">Absent</td>
+                            </tr>
+
+                        </tbody>
+                    </table>
+                </div>
+            </article>
+
+        </section>
     </main>
+
+    <!-- Camera scanner popup -->
+    <div class="popup" id="scannerPopup">
+
+        <div class="popup-card scanner-popup-card">
+
+            <button class="close-popup" id="closeScannerButton" type="button" aria-label="Close camera">
+                ×
+            </button>
+
+            <h2>Scan Attendance QR Code</h2>
+
+            <div class="camera-container">
+
+                <video id="qrVideo" playsinline muted></video>
+
+                <div class="scanner-frame"></div>
+
+            </div>
+
+            <p class="scanner-message" id="scannerMessage">
+                Press Start Camera and allow camera permission.
+            </p>
+
+            <div class="scanner-result" id="scannerResult"></div>
+
+            <button class="main-button student-button" id="startScannerButton" type="button">
+                Start Camera
+            </button>
+
+            <button class="stop-camera-button" id="stopScannerButton" type="button" disabled>
+                Stop Camera
+            </button>
+
+        </div>
+    </div>
+
+    <script type="module" src="./student-scanner.js"></script>
 
 </body>
 
