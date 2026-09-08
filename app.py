@@ -28,7 +28,6 @@ app = Flask(
 def home():
     return render_template("login.html")
 
-
 # =========================================================
 # NATHAN - LOGIN / USER AUTHENTICATION
 # =========================================================

@@ -900,3 +900,24 @@ th {
         width: 100%;
     }
 }
+
+/* TOM - QR CODE CENTRING */
+.qr-code {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 10px auto 25px auto;
+    background: none;
+}
+
+#qrcode {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+#qrcode img,
+#qrcode canvas {
+    display: block;
+    margin: 0 auto;
+}

@@ -27,11 +27,9 @@
     <main class="attendance-session-page">
         <section class="session-controls">
 
-            <div class="qr-code" aria-label="Demonstration QR code">
-                <span class="qr-square square-one"></span>
-                <span class="qr-square square-two"></span>
-                <span class="qr-square square-three"></span>
-                <span class="qr-pattern"></span>
+            <div class="qr-code">
+                <div id="qrcode"></div>
+
             </div>
 
             <div class="session-information">
@@ -157,7 +155,20 @@
             document.getElementById("endButton").disabled = true;
         }
     </script>
+<!-- TOM - QR CODE GENERATOR -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
+<script>
+    const randomCode = "GEO-" + Math.random().toString(36).substring(2, 10);
+
+    new QRCode(document.getElementById("qrcode"), {
+        text: randomCode,
+        width: 110,
+        height: 110
+    });
+
+    console.log("Generated attendance QR:", randomCode);
+</script>
 </body>
 
 </html>
