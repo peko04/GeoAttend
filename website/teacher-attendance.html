@@ -110,6 +110,7 @@
         </section>
     </main>
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script>
         const savedCode =
             localStorage.getItem("subjectCode") || "COMP301";
@@ -120,8 +121,28 @@
         document.getElementById("currentSubject").textContent =
             savedCode + " - " + savedName;
 
-        function startSession() {
-            const currentTime = new Date().toLocaleTimeString([], {
+        async function startSession() {
+
+    const response = await fetch("/attendance/session", {
+        method: "POST"
+    });
+
+    const data = await response.json();
+
+    const sessionId = data.session_id;
+    const qrContainer = document.getElementById("qrcode");
+
+qrContainer.innerHTML = "";
+
+new QRCode(qrContainer, {
+    text: sessionId,
+    width: 110,
+    height: 110
+});
+
+console.log("Generated attendance session:", sessionId);
+
+    const currentTime = new Date().toLocaleTimeString([], {
                 hour: "2-digit",
                 minute: "2-digit"
             });
@@ -156,19 +177,8 @@
         }
     </script>
 <!-- TOM - QR CODE GENERATOR -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
-<script>
-    const randomCode = "GEO-" + Math.random().toString(36).substring(2, 10);
 
-    new QRCode(document.getElementById("qrcode"), {
-        text: randomCode,
-        width: 110,
-        height: 110
-    });
-
-    console.log("Generated attendance QR:", randomCode);
-</script>
 </body>
 
 </html>

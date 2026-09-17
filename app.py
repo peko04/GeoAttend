@@ -1,5 +1,5 @@
-from flask import Flask, render_template, request, jsonify
-
+from flask import Flask, render_template, request, jsonify, send_from_directory
+import secrets
 # Database functions
 from database import (
     get_user_by_email,
@@ -28,6 +28,13 @@ app = Flask(
 def home():
     return render_template("login.html")
 
+@app.route("/teacher-attendance")
+def teacher_attendance_page():
+    return render_template("teacher-attendance.html")
+
+@app.route("/geoattend.css")
+def geoattend_css():
+    return send_from_directory("website", "geoattend.css")
 # =========================================================
 # NATHAN - LOGIN / USER AUTHENTICATION
 # =========================================================
@@ -168,6 +175,13 @@ def validate_location():
 @app.route("/attendance/session", methods=["POST"])
 def start_attendance_session():
 
+    # Generate a unique secure token for this attendance session
+    session_token = secrets.token_urlsafe(16)
+
+    return jsonify({
+        "session_id": session_token
+    })
+
     # Later:
     # Teacher chooses class
     # QR token gets generated
@@ -175,11 +189,6 @@ def start_attendance_session():
     # Session gets created using:
     #
     # create_attendance_session(...)
-
-    return jsonify({
-        "message": "Attendance session creation not implemented yet"
-    })
-
 
 # =========================================================
 # AMANIEL / INTEGRATION
