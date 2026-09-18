@@ -26,7 +26,31 @@ app = Flask(
 
 @app.route("/")
 def home():
-    return render_template("login.html")
+    return render_template("student-login.html")
+
+@app.route("/student-login.html")
+def student_login_page():
+    return render_template("student-login.html")
+
+
+@app.route("/teacher-login.html")
+def teacher_login_page():
+    return render_template("teacher-login.html")
+
+
+@app.route("/dashboard.html")
+def dashboard_page():
+    return render_template("dashboard.html")
+
+
+@app.route("/teacher-subjects.html")
+def teacher_subjects_page():
+    return render_template("teacher-subjects.html")
+
+
+@app.route("/teacher-attendance.html")
+def teacher_attendance_html_page():
+    return render_template("teacher-attendance.html")
 
 @app.route("/teacher-attendance")
 def teacher_attendance_page():
@@ -264,4 +288,4 @@ def admin_enrol():
 # =========================================================
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(debug=True, port=5001)
