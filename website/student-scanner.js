@@ -34,6 +34,7 @@ let codeAlreadyScanned = false;
     This function runs when a QR code is found.
 */
 function handleScanResult(result) {
+
     if (codeAlreadyScanned) {
         return;
     }
@@ -60,12 +61,16 @@ function handleScanResult(result) {
 
     stopButton.disabled = true;
 
-    /*
-        Later, this QR content will be sent to the
-        Flask backend to record attendance.
-    */
-
     console.log("Scanned QR code:", qrContent);
+
+
+    // =====================================================
+    // AVASH - GPS INTEGRATION POINT
+    // After the QR code is successfully scanned,
+    // begin collecting the student's GPS location.
+    // =====================================================
+
+    getLocation();
 }
 
 
@@ -88,12 +93,14 @@ const qrScanner = new QrScanner(
     Open the scanner popup.
 */
 function openScannerPopup() {
+
     popup.classList.add("show");
 
     scannerMessage.textContent =
         "Press Start Camera and allow camera permission.";
 
-    scannerMessage.className = "scanner-message";
+    scannerMessage.className =
+        "scanner-message";
 
     scannerResult.textContent = "";
     scannerResult.classList.remove("show");
@@ -106,6 +113,7 @@ function openScannerPopup() {
     Close the popup and turn the camera off.
 */
 function closeScannerPopup() {
+
     qrScanner.stop();
 
     popup.classList.remove("show");
@@ -123,7 +131,9 @@ function closeScannerPopup() {
     Start the phone or computer camera.
 */
 async function startCamera() {
+
     try {
+
         codeAlreadyScanned = false;
 
         scannerResult.textContent = "";
@@ -139,10 +149,13 @@ async function startCamera() {
         scannerMessage.textContent =
             "Point the camera at the teacher's QR code.";
 
-        scannerMessage.className = "scanner-message";
+        scannerMessage.className =
+            "scanner-message";
 
         stopButton.disabled = false;
+
     } catch (error) {
+
         console.error(error);
 
         scannerMessage.textContent =
@@ -161,9 +174,11 @@ async function startCamera() {
     Stop the camera without closing the popup.
 */
 function stopCamera() {
+
     qrScanner.stop();
 
-    scannerMessage.textContent = "Camera stopped.";
+    scannerMessage.textContent =
+        "Camera stopped.";
 
     startButton.disabled = false;
     startButton.textContent = "Start Camera";
@@ -210,6 +225,7 @@ stopButton.addEventListener(
 popup.addEventListener(
     "click",
     function (event) {
+
         if (event.target === popup) {
             closeScannerPopup();
         }
@@ -226,3 +242,221 @@ window.addEventListener(
         qrScanner.destroy();
     }
 );
+
+
+// =========================================================
+// AVASH - GPS / GEOLOCATION INTEGRATION
+// =========================================================
+//
+// Added for the GeoAttend MVP integration.
+//
+// Flow:
+//
+// Successful QR Scan
+//      ↓
+// Browser Geolocation API
+//      ↓
+// Latitude + Longitude + Accuracy
+//      ↓
+// POST /location/validate
+//      ↓
+// Flask Backend
+//      ↓
+// Coordinates returned to frontend
+//
+// NOTE:
+// This stage only proves that GPS information can travel
+// successfully from the student's browser to Flask.
+//
+// Classroom coordinates, allowed radius and geofence
+// validation will be handled by the backend/database
+// integration separately.
+// =========================================================
+
+
+/*
+    AVASH - Request student's current GPS location.
+*/
+function getLocation() {
+
+    if (!navigator.geolocation) {
+
+        scannerMessage.textContent =
+            "Geolocation is not supported by this browser.";
+
+        scannerMessage.className =
+            "scanner-message scanner-error";
+
+        return;
+    }
+
+    scannerMessage.textContent =
+        "QR verified. Getting your location...";
+
+    scannerMessage.className =
+        "scanner-message";
+
+    navigator.geolocation.getCurrentPosition(
+        sendLocationToFlask,
+        showLocationError,
+        {
+            enableHighAccuracy: true,
+            timeout: 10000,
+            maximumAge: 0
+        }
+    );
+}
+
+
+/*
+    AVASH - Send student's GPS coordinates to Flask.
+*/
+async function sendLocationToFlask(position) {
+
+    const latitude =
+        position.coords.latitude;
+
+    const longitude =
+        position.coords.longitude;
+
+    const accuracy =
+        position.coords.accuracy;
+
+
+    console.log(
+        "Student GPS:",
+        latitude,
+        longitude,
+        accuracy
+    );
+
+
+    try {
+
+        const response =
+            await fetch("/location/validate", {
+
+                method: "POST",
+
+                headers: {
+                    "Content-Type": "application/json"
+                },
+
+                body: JSON.stringify({
+                    latitude: latitude,
+                    longitude: longitude,
+                    accuracy: accuracy
+                })
+            });
+
+
+        const data =
+            await response.json();
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                data.message ||
+                "Location request failed."
+            );
+        }
+
+
+        console.log(
+            "Flask received location:",
+            data
+        );
+
+
+        scannerMessage.textContent =
+            "Location successfully sent to Flask.";
+
+        scannerMessage.className =
+            "scanner-message scanner-success";
+
+
+        scannerResult.innerHTML =
+            "<strong>GPS received by Flask</strong>" +
+            "<br><br>Latitude: " +
+            data.latitude +
+            "<br>Longitude: " +
+            data.longitude +
+            "<br>Accuracy: ±" +
+            Math.round(data.accuracy) +
+            " metres";
+
+
+        scannerResult.classList.add("show");
+
+
+    } catch (error) {
+
+        console.error(
+            "GPS to Flask error:",
+            error
+        );
+
+
+        scannerMessage.textContent =
+            "Could not send location to Flask.";
+
+        scannerMessage.className =
+            "scanner-message scanner-error";
+    }
+}
+
+
+/*
+    AVASH - Handle browser GPS/location errors.
+*/
+function showLocationError(error) {
+
+    let message;
+
+
+    switch (error.code) {
+
+        case error.PERMISSION_DENIED:
+
+            message =
+                "Location permission was denied.";
+
+            break;
+
+
+        case error.POSITION_UNAVAILABLE:
+
+            message =
+                "Your location is currently unavailable.";
+
+            break;
+
+
+        case error.TIMEOUT:
+
+            message =
+                "Location request timed out.";
+
+            break;
+
+
+        default:
+
+            message =
+                "Unable to retrieve your location.";
+    }
+
+
+    console.error(
+        "GPS error:",
+        error
+    );
+
+
+    scannerMessage.textContent =
+        message;
+
+    scannerMessage.className =
+        "scanner-message scanner-error";
+}

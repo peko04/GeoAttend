@@ -1,5 +1,6 @@
 from flask import Flask, render_template, request, jsonify, send_from_directory
 import secrets
+
 # Database functions
 from database import (
     get_user_by_email,
@@ -28,6 +29,7 @@ app = Flask(
 def home():
     return render_template("student-login.html")
 
+
 @app.route("/student-login.html")
 def student_login_page():
     return render_template("student-login.html")
@@ -52,13 +54,17 @@ def teacher_subjects_page():
 def teacher_attendance_html_page():
     return render_template("teacher-attendance.html")
 
+
 @app.route("/teacher-attendance")
 def teacher_attendance_page():
     return render_template("teacher-attendance.html")
 
+
 @app.route("/geoattend.css")
 def geoattend_css():
     return send_from_directory("website", "geoattend.css")
+
+
 # =========================================================
 # NATHAN - LOGIN / USER AUTHENTICATION
 # =========================================================
@@ -92,6 +98,7 @@ def login():
         return redirect(url_for("teacher_page"))
 
     return "Invalid account role", 403
+
 
 # =========================================================
 # STUDENT DASHBOARD
@@ -168,26 +175,87 @@ def validate_qr():
 
 
 # =========================================================
-# AVASH - LOCATION / GPS VALIDATION
+# AVASH - LOCATION / GPS INTEGRATION
 # =========================================================
 
 @app.route("/location/validate", methods=["POST"])
 def validate_location():
 
-    # Avash:
-    # Frontend sends student GPS:
+    # -----------------------------------------------------
+    # AVASH:
+    #
+    # student-scanner.js gets the student's GPS location
+    # from the browser and sends:
     #
     # {
     #     "latitude": ...,
     #     "longitude": ...,
-    #     "session_id": ...
+    #     "accuracy": ...
     # }
     #
-    # Python should compare student location
-    # against the expected session location.
+    # This route currently proves the complete connection:
+    #
+    # Browser GPS
+    #      ↓
+    # student-scanner.js
+    #      ↓
+    # Flask
+    #      ↓
+    # Flask sends coordinates back to frontend
+    #
+    # IMPORTANT:
+    # Geofence/database validation is NOT performed here yet.
+    # That will be integrated later once the attendance
+    # session/database flow is finalised by the team.
+    # -----------------------------------------------------
+
+    data = request.get_json()
+
+    # Make sure JSON was actually received
+    if data is None:
+        return jsonify({
+            "message": "No GPS data received"
+        }), 400
+
+    latitude = data.get("latitude")
+    longitude = data.get("longitude")
+    accuracy = data.get("accuracy")
+
+    # Latitude and longitude are required
+    if latitude is None or longitude is None:
+        return jsonify({
+            "message": "Latitude and longitude are required"
+        }), 400
+
+    # Print the received location in the PyCharm/Flask console.
+    # This makes it easy to demonstrate that the browser
+    # successfully communicated with the backend.
+    print("\n========================================")
+    print("AVASH - STUDENT GPS RECEIVED BY FLASK")
+    print("========================================")
+    print("Latitude :", latitude)
+    print("Longitude:", longitude)
+    print("Accuracy :", accuracy, "metres")
+    print("========================================\n")
+
+    # For the current MVP integration test,
+    # return the received GPS information to the frontend.
+    #
+    # Later the backend can:
+    #
+    # 1. Identify the attendance session
+    # 2. Identify its class/room
+    # 3. Read room latitude/longitude from SQLite
+    # 4. Calculate distance
+    # 5. Compare distance with allowed radius
+    # 6. Return inside/outside geofence
+    # 7. Use that result when recording attendance
 
     return jsonify({
-        "message": "Location validation not implemented yet"
+        "received": True,
+        "latitude": latitude,
+        "longitude": longitude,
+        "accuracy": accuracy
     })
 
 
@@ -213,6 +281,7 @@ def start_attendance_session():
     # Session gets created using:
     #
     # create_attendance_session(...)
+
 
 # =========================================================
 # AMANIEL / INTEGRATION
