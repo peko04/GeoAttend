@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><title>Student</title></head>
+<body>
+<a href="/">Back</a>
+<h1>Student</h1>
+{% for subject in subjects %}
+<h2>{{ subject.code }} — {{ subject.name }}</h2>
+<table border="1">
+    <tr>{% for week in range(1, 14) %}<th>Week {{ week }}</th>{% endfor %}</tr>
+    <tr>{% for week in range(1, 14) %}
+        <td>{{ grids[subject.subject_id].get((student_id, week), '') }}</td>
+    {% endfor %}</tr>
+</table>
+{% endfor %}
+<h2>Scan attendance QR</h2>
+<video id="camera" width="280" height="210" playsinline muted></video>
+<br>
+<button id="start">Start camera</button>
+<button id="stop">Stop camera</button>
+<p id="message"></p>
+<script type="module">
+    const message = document.getElementById('message');
+    const start = document.getElementById('start');
+    let scanner;
+    let scanned = false;
+
+    start.onclick = async () => {
+        start.disabled = true;
+        try {
+            if (!scanner) {
+                const {default: QrScanner} = await import('https://cdn.jsdelivr.net/npm/qr-scanner@1.4.2/qr-scanner.min.js');
+                scanner = new QrScanner(document.getElementById('camera'), saveAttendance,
+                    {preferredCamera: 'environment', returnDetailedScanResult: true});
+            }
+            scanned = false;
+            await scanner.start();
+            if (!scanned) message.textContent = 'Point the camera at the QR code.';
+        } catch (error) {
+            message.textContent = 'Camera unavailable. Check permission, internet, and use localhost or HTTPS.';
+            start.disabled = false;
+        }
+    };
+
+    async function saveAttendance(result) {
+        if (scanned) return;
+        scanned = true;
+        scanner.stop();
+        try {
+            const response = await fetch({{ url_for('scan', student_id=student_id) | tojson }}, {
+                method: 'POST', headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({token: result.data})
+            });
+            const data = await response.json();
+            message.textContent = data.message;
+            if (data.success) { alert(data.message); location.reload(); }
+        } catch (error) {
+            message.textContent = 'Could not confirm attendance. Refresh to check.';
+        }
+        start.disabled = false;
+    }
+
+    document.getElementById('stop').onclick = () => {
+        if (scanner) scanner.stop();
+        start.disabled = false;
+    };
+    window.addEventListener('pagehide', () => { if (scanner) scanner.stop(); });
+</script>
+</body>
+</html>

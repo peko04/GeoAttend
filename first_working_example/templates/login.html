@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Select User</title>
+</head>
+<body>
+    <h1>GeoAttend</h1>
+
+    <h2>Select a student</h2>
+
+    <form action="{{ url_for('select_student') }}" method="POST">
+        <select name="student_id" required>
+            {% for student in students %}
+                <option value="{{ student['student_id'] }}">
+                    {{ student['full_name'] }}
+                </option>
+            {% endfor %}
+        </select>
+
+        <button type="submit">Enter as student</button>
+    </form>
+
+    <h2>Select a teacher</h2>
+
+    <form action="{{ url_for('select_teacher') }}" method="POST">
+        <select name="lecturer_id" required>
+            {% for lecturer in lecturers %}
+                <option value="{{ lecturer['lecturer_id'] }}">
+                    {{ lecturer['full_name'] }}
+                </option>
+            {% endfor %}
+        </select>
+
+        <button type="submit">Enter as teacher</button>
+    </form>
+</body>
+</html>
