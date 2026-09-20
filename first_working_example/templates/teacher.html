@@ -4,30 +4,39 @@
 <body>
 <a href="/">Back</a>
 <h1>Teacher</h1>
+
 <form method="POST">
     <label>Subject <select name="subject_id">
         {% for subject in subjects %}
         <option value="{{ subject.subject_id }}">{{ subject.code }} — {{ subject.name }}</option>
         {% endfor %}
     </select></label>
+
     <label>Week <select name="week">
         {% for week in range(1, 14) %}<option>{{ week }}</option>{% endfor %}
     </select></label>
+
     <button>Start QR session</button>
 </form>
+
 {% if token %}
 <p>Session saved. Students can scan this QR code.</p>
-<div id="qrcode"></div>
+<div id="qrcode" data-token="{{ token }}"></div>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-<script>
-    new QRCode(document.getElementById('qrcode'), {text: {{ token | tojson }}, width: 200, height: 200});
-</script>
+<script src="{{ url_for('static', filename='JS/teacher.js') }}"></script>
 {% endif %}
+
 <p><a href="{{ request.path }}">Refresh attendance</a></p>
+
 {% for subject in subjects %}
 <h2>{{ subject.code }} — {{ subject.name }}</h2>
 <table border="1">
-    <tr><th>Student</th>{% for week in range(1, 14) %}<th>Week {{ week }}</th>{% endfor %}</tr>
+    <tr>
+        <th>Student</th>
+        {% for week in range(1, 14) %}<th>Week {{ week }}</th>{% endfor %}
+    </tr>
+
     {% for student in students[subject.subject_id] %}
     <tr>
         <th>{{ student.full_name }}</th>
