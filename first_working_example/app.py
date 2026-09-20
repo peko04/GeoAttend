@@ -33,6 +33,9 @@ def student_page(student_id):
 def teacher_page(teacher_id):
     subjects = db.teacher_subjects(teacher_id)
     token = None
+    selected_subject = request.form.get('subject_id', type=int)
+    selected_week = request.form.get('week', default=1, type=int)
+    session_subject = None
     if request.method == 'POST':
         subject_id = request.form.get('subject_id', type=int)
         week = request.form.get('week', type=int)
@@ -40,13 +43,16 @@ def teacher_page(teacher_id):
             return 'Invalid subject or week', 400
         token = secrets.token_urlsafe(16)
         db.start_session(subject_id, week, token)
+        session_subject = next(s for s in subjects if s['subject_id'] == subject_id)
     grids = {}
     students = {}
     for subject in subjects:
         subject_id = subject['subject_id']
         grids[subject_id] = db.attendance_grid(subject_id)
         students[subject_id] = db.class_students(subject_id)
-    return render_template('teacher.html', subjects=subjects, grids=grids, students=students, token=token)
+    return render_template('teacher.html', subjects=subjects, grids=grids, students=students, token=token,
+                           selected_subject=selected_subject, selected_week=selected_week,
+                           session_subject=session_subject)
 
 
 @app.route('/student/<int:student_id>/scan', methods=['POST'])
@@ -60,4 +66,4 @@ def scan(student_id):
 
 
 if __name__ == '__main__':
-    app.run(debug=True, port=5007)
+    app.run(host="0.0.0.0", port=5007, debug=False)

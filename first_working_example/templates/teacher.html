@@ -8,19 +8,19 @@
 <form method="POST">
     <label>Subject <select name="subject_id">
         {% for subject in subjects %}
-        <option value="{{ subject.subject_id }}">{{ subject.code }} — {{ subject.name }}</option>
+        <option value="{{ subject.subject_id }}" {% if subject.subject_id == selected_subject %}selected{% endif %}>{{ subject.code }} — {{ subject.name }}</option>
         {% endfor %}
     </select></label>
 
     <label>Week <select name="week">
-        {% for week in range(1, 14) %}<option>{{ week }}</option>{% endfor %}
+        {% for week in range(1, 14) %}<option value="{{ week }}" {% if week == selected_week %}selected{% endif %}>{{ week }}</option>{% endfor %}
     </select></label>
 
     <button>Start QR session</button>
 </form>
 
 {% if token %}
-<p>Session saved. Students can scan this QR code.</p>
+<p>Session saved for {{ session_subject.code }} — {{ session_subject.name }}, Week {{ selected_week }}. Students can scan this QR code.</p>
 <div id="qrcode" data-token="{{ token }}"></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
