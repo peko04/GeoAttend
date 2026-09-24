@@ -1,0 +1,1208 @@
+/* ===== GeoAttend: shared styles ===== */
+
+:root {
+    --navy: #073576;
+    --blue: #0878ee;
+    --teal: #098e98;
+    --background: #f3f6fa;
+    --text: #182230;
+    --muted: #697586;
+    --border: #dce3eb;
+    --green: #168347;
+    --red: #b42332;
+    --orange: #a75b06;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+    margin: 0;
+    color: var(--text);
+    background: var(--background);
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+button,
+input,
+select {
+    font: inherit;
+}
+
+button {
+    cursor: pointer;
+}
+
+button:disabled {
+    cursor: not-allowed;
+    opacity: .55;
+}
+
+a {
+    color: inherit;
+}
+
+:focus-visible {
+    outline: 3px solid #6db7ff;
+    outline-offset: 3px;
+}
+
+
+/* ===== Portal selection and student login ===== */
+
+.login-body {
+    min-height: 100vh;
+    padding: 24px;
+    display: grid;
+    place-items: center;
+    background: linear-gradient(135deg, #073576, #287fdf);
+}
+
+.login-wrapper {
+    width: min(960px, 100%);
+}
+
+.login-brand {
+    margin-bottom: 24px;
+    color: white;
+    text-align: center;
+}
+
+.login-brand h1 {
+    margin: 0;
+    font-size: clamp(38px, 6vw, 58px);
+}
+
+.login-brand p {
+    margin: 8px 0 0;
+    opacity: .9;
+}
+
+.login-card {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    overflow: hidden;
+    background: white;
+    border-radius: 14px;
+    box-shadow: 0 20px 55px #061c3d40;
+}
+
+.login-information {
+    min-height: 470px;
+    padding: 48px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    color: white;
+    background: linear-gradient(145deg, var(--navy), var(--blue));
+}
+
+.login-information h2 {
+    margin: 0 0 15px;
+    font-size: 32px;
+}
+
+.login-information p {
+    margin: 0;
+    line-height: 1.6;
+}
+
+.login-form-area {
+    padding: 45px;
+}
+
+.login-form-area h2 {
+    margin: 0 0 8px;
+}
+
+.login-subtitle {
+    margin: 0 0 28px;
+    color: var(--muted);
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 700;
+}
+
+.form-control {
+    width: 100%;
+    min-height: 48px;
+    padding: 11px 13px;
+    color: var(--text);
+    background: white;
+    border: 1px solid #bdcad9;
+    border-radius: 7px;
+}
+
+.form-control:focus {
+    border-color: var(--blue);
+    outline: 3px solid #0878ee25;
+}
+
+.login-button,
+.account-login-button {
+    width: 100%;
+    min-height: 48px;
+    padding: 10px 16px;
+    color: white;
+    background: var(--blue);
+    border: 0;
+    border-radius: 7px;
+    font-weight: 700;
+}
+
+.login-button:hover,
+.account-login-button:hover {
+    background: #0064cf;
+}
+
+.teacher-button {
+    background: var(--teal);
+}
+
+.teacher-button:hover {
+    background: #087b84;
+}
+
+/* Student email/password page */
+
+.student-login-page {
+    width: min(430px, 100%);
+}
+
+.page-title {
+    margin: 0 0 22px;
+    color: white;
+    font-size: 34px;
+    text-align: center;
+}
+
+.account-login-card {
+    overflow: hidden;
+    background: white;
+    border-radius: 14px;
+    box-shadow: 0 20px 55px #061c3d40;
+}
+
+.account-login-header {
+    padding: 25px;
+    color: white;
+    background: var(--navy);
+    font-size: 26px;
+    font-weight: 800;
+    text-align: center;
+}
+
+.account-login-form {
+    padding: 30px;
+}
+
+.portal-label {
+    margin: 18px 0 0;
+    color: var(--muted);
+    text-align: center;
+}
+
+.switch-portal-button {
+    display: block;
+    margin-top: 16px;
+    padding: 13px;
+    color: white;
+    border: 1px solid #ffffff88;
+    border-radius: 7px;
+    font-weight: 700;
+    text-align: center;
+    text-decoration: none;
+}
+
+.switch-portal-button:hover {
+    background: #ffffff20;
+}
+
+.return-home-link {
+    display: block;
+    margin-top: 18px;
+    color: white;
+    text-align: center;
+    text-decoration: none;
+}
+
+.return-home-link:hover {
+    text-decoration: underline;
+}
+
+
+/* ===== Dashboard layout ===== */
+
+.top-header {
+    min-height: 70px;
+    padding: 14px max(24px, calc((100vw - 1250px) / 2));
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 20px;
+    color: white;
+    background: var(--navy);
+}
+
+.logo {
+    color: white;
+    font-size: 26px;
+    font-weight: 800;
+    text-decoration: none;
+}
+
+.student-nav {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 22px;
+}
+
+.student-nav a {
+    color: white;
+    font-size: 14px;
+    text-decoration: none;
+}
+
+.student-nav a:hover {
+    text-decoration: underline;
+}
+
+.dashboard-container {
+    width: min(1250px, 94%);
+    margin: 34px auto 60px;
+}
+
+.page-heading {
+    margin-bottom: 26px;
+}
+
+.page-heading h1 {
+    margin: 0;
+    color: var(--navy);
+    font-size: clamp(28px, 4vw, 36px);
+}
+
+.page-heading p {
+    margin: 8px 0 0;
+    color: var(--muted);
+}
+
+.content-card {
+    margin-bottom: 20px;
+    padding: 24px;
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    box-shadow: 0 4px 16px #1122370d;
+}
+
+.student-card-heading {
+    margin-bottom: 20px;
+}
+
+.student-card-heading h2 {
+    margin: 0 0 6px;
+    color: var(--navy);
+    font-size: 21px;
+}
+
+.student-card-heading p {
+    margin: 0;
+    color: var(--muted);
+    font-size: 14px;
+}
+
+
+/* ===== Percentage and scan cards ===== */
+
+.student-overview-layout {
+    display: grid;
+    grid-template-columns: 220px minmax(0, 1fr);
+    align-items: start;
+    gap: 20px;
+}
+
+.student-overview-main {
+    min-width: 0;
+}
+
+.student-quick-cards {
+    display: grid;
+    gap: 16px;
+}
+
+.student-percentage-card,
+.student-scan-tile {
+    min-height: 170px;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    color: white;
+    background: linear-gradient(145deg, var(--navy), #0d6fda);
+    border-radius: 10px;
+    box-shadow: 0 6px 20px #07357629;
+}
+
+.student-percentage-card strong {
+    margin: 9px 0;
+    font-size: 48px;
+    line-height: 1;
+}
+
+.student-percentage-card small,
+.student-scan-tile small {
+    opacity: .85;
+    line-height: 1.4;
+}
+
+.student-scan-tile {
+    background: linear-gradient(145deg, #0c58b7, var(--blue));
+    text-decoration: none;
+}
+
+.student-scan-tile:hover {
+    filter: brightness(1.08);
+}
+
+.student-scan-symbol {
+    margin-bottom: 12px;
+    font-size: 29px;
+}
+
+.student-scan-tile strong {
+    margin-bottom: 5px;
+}
+
+
+/* ===== Attendance graph ===== */
+
+.student-chart {
+    min-height: 230px;
+    padding: 14px 10px 4px;
+    display: flex;
+    justify-content: space-around;
+    align-items: flex-end;
+    gap: 18px;
+    overflow-x: auto;
+    border-bottom: 1px solid var(--border);
+}
+
+.student-chart-item {
+    min-width: 70px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.student-chart-value {
+    min-height: 22px;
+    color: #40516a;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.student-chart-track {
+    width: 52px;
+    height: 160px;
+    display: flex;
+    align-items: flex-end;
+    overflow: hidden;
+    background: #edf2f8;
+    border-radius: 6px 6px 0 0;
+}
+
+.student-chart-bar {
+    width: 100%;
+    border-radius: 6px 6px 0 0;
+}
+
+.chart-green {
+    background: #19a653;
+}
+
+.chart-orange {
+    background: #ef931b;
+}
+
+.chart-red {
+    background: #dc3545;
+}
+
+.student-chart-label {
+    max-width: 95px;
+    margin-top: 9px;
+    overflow: hidden;
+    color: #46566c;
+    font-size: 12px;
+    font-weight: 700;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.student-chart-note {
+    margin: 15px 0 0;
+    color: var(--muted);
+    font-size: 12px;
+}
+
+
+/* ===== Recent attendance ===== */
+
+.student-history-scroll,
+.table-wrapper {
+    width: 100%;
+    overflow-x: auto;
+}
+
+.student-history-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.student-history-table th,
+.student-history-table td {
+    padding: 13px 14px;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+}
+
+.student-history-table th {
+    background: #f2f5f9;
+    font-size: 13px;
+}
+
+.student-history-table td strong {
+    display: block;
+}
+
+.student-history-table td span:not(.attendance-status) {
+    display: block;
+    margin-top: 3px;
+    color: var(--muted);
+    font-size: 12px;
+}
+
+
+/* ===== Weekly attendance tables ===== */
+
+.student-records-section {
+    margin-top: 38px;
+}
+
+.student-subject-card {
+    padding: 0;
+    overflow: hidden;
+}
+
+.student-subject-heading {
+    padding: 20px 24px;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    border-bottom: 1px solid var(--border);
+}
+
+.student-subject-heading h3 {
+    margin: 0;
+    font-size: 19px;
+}
+
+.subject-code {
+    padding: 7px 11px;
+    color: #0757b3;
+    background: #e9f3ff;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 800;
+}
+
+.attendance-table {
+    width: 100%;
+    min-width: 1040px;
+    border-collapse: collapse;
+}
+
+.attendance-table th,
+.attendance-table td {
+    min-width: 80px;
+    padding: 15px 10px;
+    text-align: center;
+    white-space: nowrap;
+    border-right: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+}
+
+.attendance-table th {
+    background: #f5f8fc;
+    font-size: 13px;
+}
+
+.attendance-table td {
+    height: 57px;
+}
+
+.attendance-status {
+    display: inline-block;
+    padding: 6px 9px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 800;
+}
+
+.status-present {
+    color: var(--green);
+    background: #e4f6eb;
+}
+
+.status-absent {
+    color: var(--red);
+    background: #fce9eb;
+}
+
+.status-late {
+    color: var(--orange);
+    background: #fff1dc;
+}
+
+.empty-status {
+    color: #a8b2bf;
+    font-size: 20px;
+}
+
+.student-no-data {
+    padding: 20px;
+    color: var(--muted);
+    text-align: center;
+}
+
+
+/* ===== QR scanner ===== */
+
+.student-scanner-card,
+#history {
+    scroll-margin-top: 20px;
+}
+
+.camera-container {
+    position: relative;
+    width: min(520px, 100%);
+    aspect-ratio: 4 / 3;
+    margin: 24px auto 18px;
+    overflow: hidden;
+    background: #101820;
+    border: 4px solid #e2eaf4;
+    border-radius: 13px;
+}
+
+.camera-container video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.scanner-frame {
+    position: absolute;
+    inset: 18%;
+    border: 3px solid #4be294;
+    border-radius: 8px;
+    pointer-events: none;
+}
+
+.scanner-actions {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.primary-button,
+.secondary-button {
+    min-height: 46px;
+    padding: 11px 22px;
+    border: 0;
+    border-radius: 7px;
+    font-weight: 700;
+}
+
+.primary-button {
+    color: white;
+    background: var(--blue);
+}
+
+.primary-button:hover {
+    background: #0064cf;
+}
+
+.secondary-button {
+    color: var(--text);
+    background: #e5eaf0;
+}
+
+.scanner-message {
+    min-height: 24px;
+    margin: 16px 0 0;
+    color: var(--muted);
+    text-align: center;
+}
+
+
+/* ===== Smaller screens ===== */
+
+@media (max-width: 900px) {
+    .student-overview-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .student-quick-cards {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 760px) {
+    .login-card {
+        grid-template-columns: 1fr;
+    }
+
+    .login-information {
+        min-height: auto;
+        padding: 30px;
+    }
+
+    .login-form-area {
+        padding: 30px 24px;
+    }
+
+    .top-header {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+}
+
+@media (max-width: 600px) {
+    .student-nav {
+        gap: 10px 16px;
+    }
+
+    .student-nav a {
+        font-size: 12px;
+    }
+
+    .student-quick-cards {
+        gap: 10px;
+    }
+
+    .student-percentage-card,
+    .student-scan-tile {
+        min-height: 150px;
+        padding: 16px;
+    }
+
+    .student-percentage-card strong {
+        font-size: 39px;
+    }
+
+    .content-card {
+        padding: 18px;
+    }
+
+    .student-subject-card {
+        padding: 0;
+    }
+
+    .student-subject-heading {
+        padding: 18px;
+    }
+}
+
+
+/* ===== Student login: reference-inspired layout ===== */
+
+.student-login-body {
+    min-height: 100vh;
+    padding: 50px 20px;
+    display: grid;
+    place-items: center;
+    background: #f3f6fa;
+}
+
+.student-login-body .student-login-page {
+    width: min(540px, 100%);
+}
+
+.student-login-body .page-title {
+    margin: 0 0 24px;
+    color: #182230;
+    font-size: 30px;
+    text-align: center;
+}
+
+.student-login-body .account-login-card {
+    background: white;
+    border: 1px solid #dce3eb;
+    border-radius: 8px;
+    box-shadow: 0 12px 35px #1122371a;
+}
+
+.student-login-body .account-login-header {
+    padding: 20px 28px;
+    background: #073576;
+    font-size: 25px;
+    text-align: left;
+}
+
+.student-login-body .account-login-form {
+    padding: 34px 38px 28px;
+}
+
+.student-login-body .account-login-button {
+    display: block;
+    width: min(320px, 100%);
+    margin: 28px auto 0;
+}
+
+.student-login-body .portal-label {
+    margin-top: 18px;
+    color: #073576;
+    font-weight: 700;
+}
+
+.student-login-body .student-login-back-button {
+    width: fit-content;
+    margin: 20px auto 0;
+    padding: 12px 24px;
+    color: white;
+    background: #0878ee;
+    border: 0;
+    border-radius: 6px;
+}
+
+.student-login-body .student-login-back-button:hover {
+    background: #0064cf;
+}
+
+@media (max-width: 600px) {
+    .student-login-body .account-login-form {
+        padding: 26px 22px;
+    }
+}
+
+/* ===== Teacher login ===== */
+
+.teacher-login-body .teacher-login-button {
+    background: #098e98;
+}
+
+.teacher-login-body .teacher-login-button:hover {
+    background: #087b84;
+}
+
+.teacher-login-body .teacher-portal-label {
+    color: #087b84;
+}
+
+
+/* ===== Teacher dashboard ===== */
+
+.teacher-session-card,
+.teacher-attendance-section {
+    scroll-margin-top: 20px;
+}
+
+.teacher-session-form {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: end;
+    gap: 16px;
+}
+
+.teacher-session-form .form-group {
+    flex: 1 1 240px;
+    margin-bottom: 0;
+}
+
+.teacher-action-button {
+    background: #098e98;
+}
+
+.teacher-action-button:hover {
+    background: #087b84;
+}
+
+.teacher-qr-result {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    align-items: center;
+    gap: 28px;
+    margin-top: 28px;
+    padding: 24px;
+    background: #f1fafb;
+    border: 1px solid #bce1e3;
+    border-radius: 10px;
+}
+
+.teacher-qr-box {
+    padding: 14px;
+    background: white;
+    border: 1px solid #dce3eb;
+    border-radius: 8px;
+}
+
+.teacher-qr-info h3 {
+    margin: 14px 0 8px;
+    color: #073576;
+}
+
+.teacher-qr-info p {
+    color: #697586;
+    line-height: 1.5;
+}
+
+.teacher-live-badge {
+    padding: 7px 11px;
+    color: #087b52;
+    background: #e1f6eb;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 800;
+}
+
+.teacher-qr-tip {
+    font-size: 13px;
+}
+
+.teacher-attendance-section {
+    margin-top: 34px;
+}
+
+.teacher-section-title {
+    display: flex;
+    justify-content: space-between;
+    align-items: start;
+    flex-wrap: wrap;
+    gap: 14px;
+}
+
+.teacher-refresh-link {
+    padding: 10px 15px;
+    color: #073576;
+    background: #e8f2ff;
+    border-radius: 7px;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.teacher-refresh-link:hover {
+    background: #d9eafd;
+}
+
+.teacher-subject-card {
+    padding: 0;
+    overflow: hidden;
+}
+
+.teacher-attendance-table {
+    min-width: 1250px;
+}
+
+.teacher-attendance-table th:first-child {
+    position: sticky;
+    left: 0;
+    z-index: 2;
+    min-width: 180px;
+    text-align: left;
+    background: #f5f8fc;
+}
+
+.teacher-attendance-table tbody th:first-child {
+    z-index: 1;
+    background: white;
+}
+
+@media (max-width: 650px) {
+    .teacher-qr-result {
+        grid-template-columns: 1fr;
+    }
+
+    .teacher-qr-box {
+        width: fit-content;
+    }
+
+    .teacher-action-button {
+        width: 100%;
+    }
+}
+
+
+/* ===== Teacher dashboard ===== */
+
+.teacher-dashboard {
+    min-height: 100vh;
+    background: #f3f6fa;
+}
+
+.teacher-session-panel,
+.teacher-attendance-section {
+    scroll-margin-top: 20px;
+}
+
+.teacher-panel-heading,
+.teacher-attendance-heading {
+    display: flex;
+    justify-content: space-between;
+    align-items: start;
+    flex-wrap: wrap;
+    gap: 16px;
+}
+
+.teacher-panel-heading {
+    margin-bottom: 26px;
+}
+
+.teacher-section-label {
+    color: #098e98;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: .12em;
+}
+
+.teacher-panel-heading h2,
+.teacher-attendance-heading h2 {
+    margin: 7px 0;
+    color: #073576;
+    font-size: 24px;
+}
+
+.teacher-panel-heading p,
+.teacher-attendance-heading p {
+    margin: 0;
+    color: #697586;
+    line-height: 1.5;
+}
+
+.teacher-session-badge {
+    padding: 9px 13px;
+    color: #526273;
+    background: #edf1f5;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 800;
+}
+
+.teacher-session-badge.is-active {
+    color: #0c7841;
+    background: #def5e8;
+}
+
+.teacher-session-form {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: end;
+    gap: 16px;
+    padding-bottom: 27px;
+    border-bottom: 1px solid #dce3eb;
+}
+
+.teacher-session-form .form-group {
+    flex: 1 1 260px;
+    margin: 0;
+}
+
+.teacher-session-form .teacher-week-field {
+    flex: 0 1 155px;
+}
+
+.teacher-start-button {
+    background: #109b4c;
+}
+
+.teacher-start-button:hover {
+    background: #0b813e;
+}
+
+.teacher-session-display {
+    display: grid;
+    grid-template-columns: 234px minmax(0, 1fr);
+    align-items: center;
+    gap: 30px;
+    padding-top: 27px;
+}
+
+.teacher-qr-box {
+    width: 234px;
+    height: 234px;
+    padding: 16px;
+    display: grid;
+    place-items: center;
+    background: white;
+    border: 1px solid #dce3eb;
+    border-radius: 9px;
+}
+
+.teacher-qr-placeholder {
+    width: 200px;
+    height: 200px;
+    display: grid;
+    place-items: center;
+    color: #91a4bb;
+    background: #f1f5fa;
+    border: 2px dashed #c8d5e3;
+    border-radius: 7px;
+    font-size: 100px;
+    line-height: 1;
+}
+
+.teacher-session-details h3 {
+    margin: 0 0 9px;
+    color: #073576;
+    font-size: 21px;
+}
+
+.teacher-session-details p {
+    color: #697586;
+    line-height: 1.6;
+}
+
+.teacher-session-week {
+    margin: 0;
+    color: #098e98 !important;
+    font-weight: 800;
+}
+
+.teacher-location-note {
+    margin-top: 20px;
+    padding: 14px 16px;
+    display: grid;
+    gap: 5px;
+    background: #f1f8fb;
+    border-left: 4px solid #098e98;
+    border-radius: 5px;
+}
+
+.teacher-location-note strong {
+    color: #073576;
+}
+
+.teacher-location-note span {
+    color: #526273;
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+.teacher-attendance-section {
+    margin-top: 36px;
+}
+
+.teacher-attendance-heading {
+    margin-bottom: 20px;
+}
+
+.teacher-refresh-link {
+    padding: 11px 15px;
+    color: #073576;
+    background: #e8f2ff;
+    border-radius: 7px;
+    font-size: 13px;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.teacher-refresh-link:hover {
+    background: #d9eafd;
+}
+
+.teacher-subject-card {
+    padding: 0;
+    overflow: hidden;
+}
+
+.teacher-subject-heading {
+    padding: 21px 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    border-bottom: 1px solid #dce3eb;
+}
+
+.teacher-subject-heading > div {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.teacher-subject-heading h3 {
+    margin: 0;
+    font-size: 18px;
+}
+
+.teacher-student-count {
+    color: #697586;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.teacher-attendance-table {
+    min-width: 1250px;
+}
+
+.teacher-attendance-table th:first-child {
+    position: sticky;
+    left: 0;
+    z-index: 2;
+    min-width: 180px;
+    text-align: left;
+    background: #f5f8fc;
+}
+
+.teacher-attendance-table tbody th:first-child {
+    z-index: 1;
+    background: white;
+}
+
+.teacher-table-hint {
+    margin: 0;
+    padding: 12px 24px;
+    color: #697586;
+    background: #fbfcfe;
+    border-top: 1px solid #dce3eb;
+    font-size: 12px;
+}
+
+@media (max-width: 650px) {
+    .teacher-session-form .teacher-week-field {
+        flex: 1 1 100%;
+    }
+
+    .teacher-start-button {
+        width: 100%;
+    }
+
+    .teacher-session-display {
+        grid-template-columns: 1fr;
+    }
+
+    .teacher-qr-box {
+        margin: auto;
+    }
+
+    .teacher-subject-heading {
+        padding: 18px;
+    }
+}

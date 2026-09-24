@@ -1,51 +1,271 @@
 <!DOCTYPE html>
 <html lang="en">
-<head><title>Teacher</title></head>
-<body>
-<a href="/">Back</a>
-<h1>Teacher</h1>
 
-<form method="POST">
-    <label>Subject <select name="subject_id">
-        {% for subject in subjects %}
-        <option value="{{ subject.subject_id }}" {% if subject.subject_id == selected_subject %}selected{% endif %}>{{ subject.code }} — {{ subject.name }}</option>
-        {% endfor %}
-    </select></label>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teacher Dashboard | GeoAttend</title>
 
-    <label>Week <select name="week">
-        {% for week in range(1, 14) %}<option value="{{ week }}" {% if week == selected_week %}selected{% endif %}>{{ week }}</option>{% endfor %}
-    </select></label>
 
-    <button>Start QR session</button>
-</form>
+</head>
 
-{% if token %}
-<p>Session saved for {{ session_subject.code }} — {{ session_subject.name }}, Week {{ selected_week }}. Students can scan this QR code.</p>
-<div id="qrcode" data-token="{{ token }}"></div>
+<body class="teacher-dashboard">
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-<script src="{{ url_for('static', filename='JS/teacher.js') }}"></script>
-{% endif %}
+    <header class="top-header">
+        <a class="logo" href="{{ url_for('select_user_page') }}">
+            GeoAttend
+        </a>
 
-<p><a href="{{ request.path }}">Refresh attendance</a></p>
+        <nav class="student-nav" aria-label="Teacher navigation">
+            <a href="#session">QR Session</a>
+            <a href="#attendance">Attendance</a>
+            <a href="{{ url_for('select_user_page') }}">Back to portals</a>
+        </nav>
+    </header>
 
-{% for subject in subjects %}
-<h2>{{ subject.code }} — {{ subject.name }}</h2>
-<table border="1">
-    <tr>
-        <th>Student</th>
-        {% for week in range(1, 14) %}<th>Week {{ week }}</th>{% endfor %}
-    </tr>
+    <main class="dashboard-container">
 
-    {% for student in students[subject.subject_id] %}
-    <tr>
-        <th>{{ student.full_name }}</th>
-        {% for week in range(1, 14) %}
-        <td>{{ grids[subject.subject_id].get((student.student_id, week), '') }}</td>
-        {% endfor %}
-    </tr>
-    {% endfor %}
-</table>
-{% endfor %}
+        <div class="page-heading">
+            <h1>Teacher Dashboard</h1>
+            <p>Generate a classroom QR code and review attendance.</p>
+        </div>
+
+        <section class="content-card teacher-session-panel" id="session">
+
+            <div class="teacher-panel-heading">
+                <div>
+                    <span class="teacher-section-label">CLASS SESSION</span>
+                    <h2>Attendance QR Session</h2>
+                    <p>Choose your class and week, then start the session.</p>
+                </div>
+
+                {% if token %}
+                    <span class="teacher-session-badge is-active">
+                        QR generated
+                    </span>
+                {% else %}
+                    <span class="teacher-session-badge">
+                        No QR displayed
+                    </span>
+                {% endif %}
+            </div>
+
+            {% if subjects %}
+            <form method="POST" class="teacher-session-form">
+
+                <div class="form-group">
+                    <label for="subjectId">Subject</label>
+
+                    <select
+                        class="form-control"
+                        id="subjectId"
+                        name="subject_id"
+                        required
+                    >
+                        {% for subject in subjects %}
+                        <option
+                            value="{{ subject.subject_id }}"
+                            {% if subject.subject_id == selected_subject %}selected{% endif %}
+                        >
+                            {{ subject.code }} — {{ subject.name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="form-group teacher-week-field">
+                    <label for="sessionWeek">Week</label>
+
+                    <select
+                        class="form-control"
+                        id="sessionWeek"
+                        name="week"
+                        required
+                    >
+                        {% for week in range(1, 14) %}
+                        <option
+                            value="{{ week }}"
+                            {% if week == selected_week %}selected{% endif %}
+                        >
+                            Week {{ week }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <button
+                    class="primary-button teacher-start-button"
+                    type="submit"
+                >
+                    Start QR Session
+                </button>
+
+            </form>
+            {% else %}
+            <p class="student-no-data">
+                No active subjects were found for this teacher.
+            </p>
+            {% endif %}
+
+            <div class="teacher-session-display">
+                <div class="teacher-qr-box">
+                    {% if token %}
+                        <div id="qrcode" data-token="{{ token }}"></div>
+                    {% else %}
+                        <div class="teacher-qr-placeholder" aria-hidden="true">
+                            ▦
+                        </div>
+                    {% endif %}
+                </div>
+
+                <div class="teacher-session-details">
+                    {% if token %}
+                        <h3>
+                            {{ session_subject.code }}
+                            —
+                            {{ session_subject.name }}
+                        </h3>
+
+                        <p class="teacher-session-week">
+                            Week {{ selected_week }}
+                        </p>
+
+                        <p>
+                            Show this QR code to students enrolled in this
+                            subject. They can scan it to submit attendance.
+                        </p>
+                    {% else %}
+                        <h3>Ready when you are</h3>
+
+                        <p>
+                            Select a subject and week above, then start a
+                            session to display its QR code here.
+                        </p>
+                    {% endif %}
+
+                    <div class="teacher-location-note">
+                        <strong>Location verification</strong>
+                        <span>
+                            Awaiting GPS integration. This page does not yet
+                            check a student's distance from the classroom.
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+        </section>
+
+        <section class="teacher-attendance-section" id="attendance">
+
+            <div class="teacher-attendance-heading">
+                <div>
+                    <span class="teacher-section-label">ATTENDANCE RECORDS</span>
+                    <h2>Student Attendance</h2>
+                    <p>View recorded status for each student and week.</p>
+                </div>
+
+                <a
+                    class="teacher-refresh-link"
+                    href="{{ request.path }}#attendance"
+                >
+                    Refresh attendance
+                </a>
+            </div>
+
+            {% for subject in subjects %}
+            <article class="content-card teacher-subject-card">
+
+                <div class="teacher-subject-heading">
+                    <div>
+                        <span class="subject-code">
+                            {{ subject.code }}
+                        </span>
+
+                        <h3>{{ subject.name }}</h3>
+                    </div>
+
+                    <span class="teacher-student-count">
+                        {{ students[subject.subject_id]|length }}
+                        students
+                    </span>
+                </div>
+
+                <div class="table-wrapper">
+                    <table class="attendance-table teacher-attendance-table">
+
+                        <thead>
+                            <tr>
+                                <th scope="col">Student</th>
+
+                                {% for week in range(1, 14) %}
+                                <th scope="col">
+                                    Week {{ week }}
+                                </th>
+                                {% endfor %}
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            {% for student in students[subject.subject_id] %}
+                            <tr>
+                                <th scope="row">
+                                    {{ student.full_name }}
+                                </th>
+
+                                {% for week in range(1, 14) %}
+                                    {% set status = grids[subject.subject_id].get((student.student_id, week), '') %}
+
+                                    <td>
+                                        {% if status %}
+                                            <span class="attendance-status
+                                                {% if status|upper == 'PRESENT' %}status-present
+                                                {% elif status|upper == 'ABSENT' %}status-absent
+                                                {% elif status|upper == 'LATE' %}status-late
+                                                {% endif %}">
+                                                {{ status }}
+                                            </span>
+                                        {% else %}
+                                            <span class="empty-status">
+                                                —
+                                            </span>
+                                        {% endif %}
+                                    </td>
+                                {% endfor %}
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td
+                                    colspan="14"
+                                    class="student-no-data"
+                                >
+                                    No students enrolled in this subject.
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+
+                    </table>
+                </div>
+
+                <p class="teacher-table-hint">
+                    Scroll sideways to view all 13 weeks.
+                </p>
+
+            </article>
+            {% else %}
+            <div class="content-card student-no-data">
+                No subjects available.
+            </div>
+            {% endfor %}
+
+        </section>
+
+    </main>
+
+    {% if token %}
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="{{ url_for('static', filename='JS/teacher.js') }}"></script>
+    {% endif %}
+
 </body>
 </html>

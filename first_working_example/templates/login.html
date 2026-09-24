@@ -1,37 +1,168 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
+
 <head>
-    <title>Select User</title>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>GeoAttend Login</title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='CSS/style.css') }}"
+    >
 </head>
-<body>
-    <h1>GeoAttend</h1>
 
-    <h2>Select a student</h2>
+<body class="login-body">
 
-    <form action="{{ url_for('select_student') }}" method="POST">
-        <select name="student_id" required>
-            {% for student in students %}
-                <option value="{{ student['student_id'] }}">
-                    {{ student['full_name'] }}
-                </option>
-            {% endfor %}
-        </select>
+    <main class="login-wrapper">
 
-        <button type="submit">Enter as student</button>
-    </form>
+        <header class="login-brand">
 
-    <h2>Select a teacher</h2>
+            <h1>GeoAttend</h1>
 
-    <form action="{{ url_for('select_teacher') }}" method="POST">
-        <select name="lecturer_id" required>
-            {% for lecturer in lecturers %}
-                <option value="{{ lecturer['lecturer_id'] }}">
-                    {{ lecturer['full_name'] }}
-                </option>
-            {% endfor %}
-        </select>
+            <p>
+                Smart and simple university attendance
+            </p>
 
-        <button type="submit">Enter as teacher</button>
-    </form>
+        </header>
+
+
+        <section class="login-card">
+
+            <!-- Left information section -->
+            <div class="login-information">
+
+                <h2>
+                    Welcome to GeoAttend
+                </h2>
+
+                <p>
+                    Select your account to view attendance,
+                    scan a classroom QR code, or start a new
+                    attendance session.
+                </p>
+
+            </div>
+
+
+            <!-- Right selection section -->
+            <div class="login-form-area">
+
+                <h2>
+                    Select your portal
+                </h2>
+
+                <p class="login-subtitle">
+                    Choose a student or teacher account.
+                </p>
+
+
+                <!-- Student selection -->
+                <form
+                    action="{{ url_for('select_student') }}"
+                    method="POST"
+                >
+
+                    <div class="form-group">
+
+                        <label for="studentId">
+                            Student
+                        </label>
+
+                        <select
+                            class="form-control"
+                            id="studentId"
+                            name="student_id"
+                            required
+                        >
+
+                            {% for student in students %}
+
+                                <option
+                                    value="{{ student['student_id'] }}"
+                                >
+                                    {{ student['full_name'] }}
+                                </option>
+
+                            {% endfor %}
+
+                        </select>
+
+                    </div>
+
+
+                    <button
+                        class="login-button"
+                        type="submit"
+                    >
+                        Enter Student Portal
+                    </button>
+
+                </form>
+
+
+                <div
+                    style="
+                        margin: 28px 0;
+                        border-top: 1px solid #dce3eb;
+                    "
+                ></div>
+
+
+                <!-- Teacher selection -->
+                <form
+                    action="{{ url_for('select_teacher') }}"
+                    method="POST"
+                >
+
+                    <div class="form-group">
+
+                        <label for="teacherId">
+                            Teacher
+                        </label>
+
+                        <select
+                            class="form-control"
+                            id="teacherId"
+                            name="lecturer_id"
+                            required
+                        >
+
+                            {% for lecturer in lecturers %}
+
+                                <option
+                                    value="{{ lecturer['lecturer_id'] }}"
+                                >
+                                    {{ lecturer['full_name'] }}
+                                </option>
+
+                            {% endfor %}
+
+                        </select>
+
+                    </div>
+
+
+                    <button
+                        class="login-button teacher-button"
+                        type="submit"
+                    >
+                        Enter Teacher Portal
+                    </button>
+
+                </form>
+
+            </div>
+
+        </section>
+
+    </main>
+
 </body>
+
 </html>

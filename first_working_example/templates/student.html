@@ -1,27 +1,351 @@
 <!DOCTYPE html>
 <html lang="en">
-<head><title>Student</title></head>
-<body>
-<a href="/">Back</a>
-<h1>Student</h1>
 
-{% for subject in subjects %}
-<h2>{{ subject.code }} — {{ subject.name }}</h2>
-<table border="1">
-    <tr>{% for week in range(1, 14) %}<th>Week {{ week }}</th>{% endfor %}</tr>
-    <tr>{% for week in range(1, 14) %}
-        <td>{{ grids[subject.subject_id].get((student_id, week), '') }}</td>
-    {% endfor %}</tr>
-</table>
-{% endfor %}
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Dashboard | GeoAttend</title>
 
-<h2>Scan attendance QR</h2>
-<video id="camera" width="280" height="210" playsinline muted></video>
-<br>
-<button id="start">Start camera</button>
-<button id="stop">Stop camera</button>
-<p id="message" data-scan-url="{{ url_for('scan', student_id=student_id) }}"></p>
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='CSS/style.css') }}"
+    >
+</head>
 
-<script type="module" src="{{ url_for('static', filename='JS/student.js') }}"></script>
+<body class="student-dashboard">
+
+    {# Count PRESENT weeks across all subjects. Each subject has 13 weeks. #}
+    {% set totals = namespace(present=0) %}
+    {% set total_possible = subjects|length * 13 %}
+
+    {% for subject in subjects %}
+        {% for week in range(1, 14) %}
+            {% set status = grids[subject.subject_id].get((student_id, week), '')|upper %}
+
+            {% if status == 'PRESENT' %}
+                {% set totals.present = totals.present + 1 %}
+            {% endif %}
+        {% endfor %}
+    {% endfor %}
+
+    <header class="top-header">
+        <a class="logo" href="{{ url_for('select_user_page') }}">
+            GeoAttend
+        </a>
+
+        <nav class="student-nav" aria-label="Student navigation">
+            <a href="#overview">Dashboard</a>
+            <a href="#scan-attendance">Scan Attendance</a>
+            <a href="#history">History</a>
+            <a href="{{ url_for('select_user_page') }}">Back to portals</a>
+        </nav>
+    </header>
+
+    <main class="dashboard-container" id="overview">
+
+        <div class="page-heading">
+            <h1>Student Dashboard</h1>
+            <p>Your attendance overview and weekly records.</p>
+        </div>
+
+        <div class="student-overview-layout">
+
+            <aside class="student-quick-cards">
+
+                <section class="student-percentage-card" aria-label="Overall attendance">
+                    <span>Overall attendance</span>
+
+                    {% if total_possible %}
+                        <strong>
+                            {{ ((totals.present / total_possible) * 100)|round|int }}%
+                        </strong>
+                    {% else %}
+                        <strong>—</strong>
+                    {% endif %}
+
+                    <small>
+                        {{ totals.present }} present out of
+                        {{ total_possible }} possible weeks
+                    </small>
+                </section>
+
+                <a class="student-scan-tile" href="#scan-attendance">
+                    <span class="student-scan-symbol" aria-hidden="true">▣</span>
+                    <strong>Scan QR Code</strong>
+                    <small>Record your attendance</small>
+                </a>
+
+            </aside>
+
+            <div class="student-overview-main">
+
+                <section class="content-card student-chart-card">
+                    <div class="student-card-heading">
+                        <div>
+                            <h2>Attendance Overview</h2>
+                            <p>Present weeks by subject</p>
+                        </div>
+                    </div>
+
+                    {% if subjects %}
+                    <div class="student-chart">
+
+                        {% for subject in subjects %}
+                            {% set subject_total = namespace(present=0) %}
+
+                            {% for week in range(1, 14) %}
+                                {% set status = grids[subject.subject_id].get((student_id, week), '')|upper %}
+
+                                {% if status == 'PRESENT' %}
+                                    {% set subject_total.present = subject_total.present + 1 %}
+                                {% endif %}
+                            {% endfor %}
+
+                            {% set percentage = ((subject_total.present / 13) * 100)|round|int %}
+
+                            <div class="student-chart-item">
+
+                                <span class="student-chart-value">
+                                    {{ percentage }}%
+                                </span>
+
+                                <div class="student-chart-track">
+                                    <div
+                                        class="student-chart-bar
+                                        {% if percentage >= 75 %}chart-green
+                                        {% elif percentage >= 50 %}chart-orange
+                                        {% else %}chart-red{% endif %}"
+                                        style="height: {{ percentage }}%;"
+                                    ></div>
+                                </div>
+
+                                <span
+                                    class="student-chart-label"
+                                    title="{{ subject.name }}"
+                                >
+                                    {{ subject.code }}
+                                </span>
+
+                            </div>
+                        {% endfor %}
+
+                    </div>
+
+                    <p class="student-chart-note">
+                        Present weeks out of 13 for each subject.
+                        Future weeks are included in the total.
+                    </p>
+                    {% else %}
+                    <p class="student-no-data">
+                        No subjects available yet.
+                    </p>
+                    {% endif %}
+                </section>
+
+                <section
+                    class="content-card student-history-card"
+                    id="history"
+                >
+                    <div class="student-card-heading">
+                        <div>
+                            <h2>Recent Attendance</h2>
+                            <p>Your latest recorded weeks</p>
+                        </div>
+                    </div>
+
+                    <div class="student-history-scroll">
+                        <table class="student-history-table">
+
+                            <thead>
+                                <tr>
+                                    <th scope="col">Week</th>
+                                    <th scope="col">Course</th>
+                                    <th scope="col">Status</th>
+                                </tr>
+                            </thead>
+
+                            <tbody>
+                                {% set recent = namespace(count=0) %}
+
+                                {% for week in range(13, 0, -1) %}
+                                    {% for subject in subjects %}
+                                        {% set status = grids[subject.subject_id].get((student_id, week), '') %}
+
+                                        {% if status and recent.count < 6 %}
+                                            {% set recent.count = recent.count + 1 %}
+
+                                            <tr>
+                                                <td>Week {{ week }}</td>
+
+                                                <td>
+                                                    <strong>{{ subject.code }}</strong>
+                                                    <span>{{ subject.name }}</span>
+                                                </td>
+
+                                                <td>
+                                                    <span class="attendance-status
+                                                        {% if status|upper == 'PRESENT' %}status-present
+                                                        {% elif status|upper == 'ABSENT' %}status-absent
+                                                        {% elif status|upper == 'LATE' %}status-late
+                                                        {% endif %}">
+                                                        {{ status }}
+                                                    </span>
+                                                </td>
+                                            </tr>
+                                        {% endif %}
+                                    {% endfor %}
+                                {% endfor %}
+
+                                {% if recent.count == 0 %}
+                                <tr>
+                                    <td colspan="3" class="student-no-data">
+                                        No attendance has been recorded yet.
+                                    </td>
+                                </tr>
+                                {% endif %}
+                            </tbody>
+
+                        </table>
+                    </div>
+                </section>
+
+            </div>
+        </div>
+
+        <section
+            class="student-records-section"
+            aria-labelledby="records-heading"
+        >
+            <div class="student-card-heading">
+                <div>
+                    <h2 id="records-heading">Weekly Attendance</h2>
+                    <p>View all 13 weeks for each subject</p>
+                </div>
+            </div>
+
+            {% for subject in subjects %}
+            <article class="content-card student-subject-card">
+
+                <div class="student-subject-heading">
+                    <span class="subject-code">
+                        {{ subject.code }}
+                    </span>
+
+                    <h3>{{ subject.name }}</h3>
+                </div>
+
+                <div class="table-wrapper">
+                    <table class="attendance-table student-attendance-table">
+
+                        <thead>
+                            <tr>
+                                {% for week in range(1, 14) %}
+                                <th scope="col">
+                                    Week {{ week }}
+                                </th>
+                                {% endfor %}
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            <tr>
+                                {% for week in range(1, 14) %}
+                                    {% set status = grids[subject.subject_id].get((student_id, week), '') %}
+
+                                    <td>
+                                        {% if status %}
+                                            <span class="attendance-status
+                                                {% if status|upper == 'PRESENT' %}status-present
+                                                {% elif status|upper == 'ABSENT' %}status-absent
+                                                {% elif status|upper == 'LATE' %}status-late
+                                                {% endif %}">
+                                                {{ status }}
+                                            </span>
+                                        {% else %}
+                                            <span class="empty-status">—</span>
+                                        {% endif %}
+                                    </td>
+                                {% endfor %}
+                            </tr>
+                        </tbody>
+
+                    </table>
+                </div>
+
+            </article>
+            {% else %}
+            <div class="content-card student-no-data">
+                No active subjects were found for this student.
+            </div>
+            {% endfor %}
+        </section>
+
+        <section
+            class="content-card student-scanner-card"
+            id="scan-attendance"
+            aria-labelledby="scanner-heading"
+        >
+            <div class="student-card-heading">
+                <div>
+                    <h2 id="scanner-heading">
+                        Scan Attendance QR
+                    </h2>
+
+                    <p>
+                        Point your camera at the QR code
+                        displayed by your teacher.
+                    </p>
+                </div>
+            </div>
+
+            <div class="camera-container">
+                <video
+                    id="camera"
+                    playsinline
+                    muted
+                    aria-label="QR scanner camera preview"
+                ></video>
+
+                <div
+                    class="scanner-frame"
+                    aria-hidden="true"
+                ></div>
+            </div>
+
+            <div class="scanner-actions">
+                <button
+                    id="start"
+                    class="primary-button"
+                    type="button"
+                >
+                    Start camera
+                </button>
+
+                <button
+                    id="stop"
+                    class="secondary-button"
+                    type="button"
+                >
+                    Stop camera
+                </button>
+            </div>
+
+            <p
+                id="message"
+                class="scanner-message"
+                role="status"
+                aria-live="polite"
+                data-scan-url="{{ url_for('scan', student_id=student_id) }}"
+            ></p>
+
+        </section>
+
+    </main>
+
+    <script
+        type="module"
+        src="{{ url_for('static', filename='JS/student.js') }}"
+    ></script>
+
 </body>
 </html>
