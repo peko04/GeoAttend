@@ -4,57 +4,133 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <title>Teacher Dashboard | GeoAttend</title>
 
-
+    <!-- Main CSS -->
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='CSS/style.css') }}"
+    >
 </head>
+
 
 <body class="teacher-dashboard">
 
+    <!-- ========================================= -->
+    <!-- HEADER -->
+    <!-- ========================================= -->
+
     <header class="top-header">
+
         <a class="logo" href="{{ url_for('select_user_page') }}">
             GeoAttend
         </a>
 
         <nav class="student-nav" aria-label="Teacher navigation">
-            <a href="#session">QR Session</a>
-            <a href="#attendance">Attendance</a>
-            <a href="{{ url_for('select_user_page') }}">Back to portals</a>
+
+            <a href="#session">
+                QR Session
+            </a>
+
+            <a href="#attendance">
+                Attendance
+            </a>
+
+            <a href="{{ url_for('select_user_page') }}">
+                Back to portals
+            </a>
+
         </nav>
+
     </header>
+
+
+    <!-- ========================================= -->
+    <!-- MAIN DASHBOARD -->
+    <!-- ========================================= -->
 
     <main class="dashboard-container">
 
+
+        <!-- PAGE HEADING -->
+
         <div class="page-heading">
-            <h1>Teacher Dashboard</h1>
-            <p>Generate a classroom QR code and review attendance.</p>
+
+            <h1>
+                Teacher Dashboard
+            </h1>
+
+            <p>
+                Generate a classroom QR code and review attendance.
+            </p>
+
         </div>
 
-        <section class="content-card teacher-session-panel" id="session">
+
+        <!-- ========================================= -->
+        <!-- QR SESSION -->
+        <!-- ========================================= -->
+
+        <section
+            class="content-card teacher-session-panel"
+            id="session"
+        >
 
             <div class="teacher-panel-heading">
+
                 <div>
-                    <span class="teacher-section-label">CLASS SESSION</span>
-                    <h2>Attendance QR Session</h2>
-                    <p>Choose your class and week, then start the session.</p>
+
+                    <span class="teacher-section-label">
+                        CLASS SESSION
+                    </span>
+
+                    <h2>
+                        Attendance QR Session
+                    </h2>
+
+                    <p>
+                        Choose your class and week, then start the session.
+                    </p>
+
                 </div>
 
+
                 {% if token %}
+
                     <span class="teacher-session-badge is-active">
                         QR generated
                     </span>
+
                 {% else %}
+
                     <span class="teacher-session-badge">
                         No QR displayed
                     </span>
+
                 {% endif %}
+
             </div>
 
+
+            <!-- ========================================= -->
+            <!-- START SESSION FORM -->
+            <!-- ========================================= -->
+
             {% if subjects %}
-            <form method="POST" class="teacher-session-form">
+
+            <form
+                method="POST"
+                class="teacher-session-form"
+            >
+
+                <!-- SUBJECT -->
 
                 <div class="form-group">
-                    <label for="subjectId">Subject</label>
+
+                    <label for="subjectId">
+                        Subject
+                    </label>
 
                     <select
                         class="form-control"
@@ -62,19 +138,34 @@
                         name="subject_id"
                         required
                     >
+
                         {% for subject in subjects %}
+
                         <option
                             value="{{ subject.subject_id }}"
-                            {% if subject.subject_id == selected_subject %}selected{% endif %}
+                            {% if subject.subject_id == selected_subject %}
+                                selected
+                            {% endif %}
                         >
+
                             {{ subject.code }} — {{ subject.name }}
+
                         </option>
+
                         {% endfor %}
+
                     </select>
+
                 </div>
 
+
+                <!-- WEEK -->
+
                 <div class="form-group teacher-week-field">
-                    <label for="sessionWeek">Week</label>
+
+                    <label for="sessionWeek">
+                        Week
+                    </label>
 
                     <select
                         class="form-control"
@@ -82,16 +173,28 @@
                         name="week"
                         required
                     >
+
                         {% for week in range(1, 14) %}
+
                         <option
                             value="{{ week }}"
-                            {% if week == selected_week %}selected{% endif %}
+                            {% if week == selected_week %}
+                                selected
+                            {% endif %}
                         >
+
                             Week {{ week }}
+
                         </option>
+
                         {% endfor %}
+
                     </select>
+
                 </div>
+
+
+                <!-- START QR BUTTON -->
 
                 <button
                     class="primary-button teacher-start-button"
@@ -101,68 +204,136 @@
                 </button>
 
             </form>
+
+
             {% else %}
+
             <p class="student-no-data">
                 No active subjects were found for this teacher.
             </p>
+
             {% endif %}
 
+
+            <!-- ========================================= -->
+            <!-- QR DISPLAY -->
+            <!-- ========================================= -->
+
             <div class="teacher-session-display">
+
                 <div class="teacher-qr-box">
+
                     {% if token %}
-                        <div id="qrcode" data-token="{{ token }}"></div>
+
+                        <div
+                            id="qrcode"
+                            data-token="{{ token }}"
+                        ></div>
+
                     {% else %}
-                        <div class="teacher-qr-placeholder" aria-hidden="true">
+
+                        <div
+                            class="teacher-qr-placeholder"
+                            aria-hidden="true"
+                        >
                             ▦
                         </div>
+
                     {% endif %}
+
                 </div>
 
+
                 <div class="teacher-session-details">
+
                     {% if token %}
+
                         <h3>
+
                             {{ session_subject.code }}
+
                             —
+
                             {{ session_subject.name }}
+
                         </h3>
 
+
                         <p class="teacher-session-week">
+
                             Week {{ selected_week }}
+
                         </p>
+
 
                         <p>
                             Show this QR code to students enrolled in this
                             subject. They can scan it to submit attendance.
                         </p>
+
+
                     {% else %}
-                        <h3>Ready when you are</h3>
+
+                        <h3>
+                            Ready when you are
+                        </h3>
 
                         <p>
                             Select a subject and week above, then start a
                             session to display its QR code here.
                         </p>
+
                     {% endif %}
 
+
                     <div class="teacher-location-note">
-                        <strong>Location verification</strong>
+
+                        <strong>
+                            Location verification
+                        </strong>
+
                         <span>
                             Awaiting GPS integration. This page does not yet
                             check a student's distance from the classroom.
                         </span>
+
                     </div>
+
                 </div>
+
             </div>
 
         </section>
 
-        <section class="teacher-attendance-section" id="attendance">
+
+        <!-- ========================================= -->
+        <!-- ATTENDANCE SECTION -->
+        <!-- ========================================= -->
+
+        <section
+            class="teacher-attendance-section"
+            id="attendance"
+        >
 
             <div class="teacher-attendance-heading">
+
                 <div>
-                    <span class="teacher-section-label">ATTENDANCE RECORDS</span>
-                    <h2>Student Attendance</h2>
-                    <p>View recorded status for each student and week.</p>
+
+                    <span class="teacher-section-label">
+                        ATTENDANCE RECORDS
+                    </span>
+
+                    <h2>
+                        Student Attendance
+                    </h2>
+
+                    <p>
+                        View and manually change attendance
+                        for each student and week.
+                    </p>
+
                 </div>
+
 
                 <a
                     class="teacher-refresh-link"
@@ -170,102 +341,266 @@
                 >
                     Refresh attendance
                 </a>
+
             </div>
 
+
+            <!-- ========================================= -->
+            <!-- SUBJECTS -->
+            <!-- ========================================= -->
+
             {% for subject in subjects %}
+
             <article class="content-card teacher-subject-card">
 
+
+                <!-- SUBJECT HEADING -->
+
                 <div class="teacher-subject-heading">
+
                     <div>
+
                         <span class="subject-code">
                             {{ subject.code }}
                         </span>
 
-                        <h3>{{ subject.name }}</h3>
+                        <h3>
+                            {{ subject.name }}
+                        </h3>
+
                     </div>
 
+
                     <span class="teacher-student-count">
+
                         {{ students[subject.subject_id]|length }}
+
                         students
+
                     </span>
+
                 </div>
 
+
+                <!-- ========================================= -->
+                <!-- ATTENDANCE TABLE -->
+                <!-- ========================================= -->
+
                 <div class="table-wrapper">
-                    <table class="attendance-table teacher-attendance-table">
+
+                    <table
+                        class="attendance-table teacher-attendance-table"
+                    >
+
+                        <!-- TABLE HEAD -->
 
                         <thead>
+
                             <tr>
-                                <th scope="col">Student</th>
+
+                                <th scope="col">
+                                    Student
+                                </th>
+
 
                                 {% for week in range(1, 14) %}
+
                                 <th scope="col">
                                     Week {{ week }}
                                 </th>
+
                                 {% endfor %}
+
                             </tr>
+
                         </thead>
 
+
+                        <!-- TABLE BODY -->
+
                         <tbody>
+
                             {% for student in students[subject.subject_id] %}
+
                             <tr>
+
+
+                                <!-- STUDENT NAME -->
+
                                 <th scope="row">
+
                                     {{ student.full_name }}
+
                                 </th>
 
+
+                                <!-- ================================= -->
+                                <!-- MANUAL ATTENDANCE DROPDOWNS -->
+                                <!-- ================================= -->
+
                                 {% for week in range(1, 14) %}
-                                    {% set status = grids[subject.subject_id].get((student.student_id, week), '') %}
+
+                                    {% set status =
+                                        grids[subject.subject_id].get(
+                                            (student.student_id, week),
+                                            ''
+                                        )
+                                    %}
+
 
                                     <td>
-                                        {% if status %}
-                                            <span class="attendance-status
-                                                {% if status|upper == 'PRESENT' %}status-present
-                                                {% elif status|upper == 'ABSENT' %}status-absent
-                                                {% elif status|upper == 'LATE' %}status-late
-                                                {% endif %}">
-                                                {{ status }}
-                                            </span>
-                                        {% else %}
-                                            <span class="empty-status">
+
+                                        <select
+                                            class="attendance-dropdown"
+                                            data-student-id="{{ student.student_id }}"
+                                            data-subject-id="{{ subject.subject_id }}"
+                                            data-week="{{ week }}"
+                                        >
+
+
+                                            <!-- NO STATUS -->
+
+                                            <option
+                                                value=""
+                                                {% if not status %}
+                                                    selected
+                                                {% endif %}
+                                            >
                                                 —
-                                            </span>
-                                        {% endif %}
+                                            </option>
+
+
+                                            <!-- PRESENT -->
+
+                                            <option
+                                                value="PRESENT"
+                                                {% if status|upper == 'PRESENT' %}
+                                                    selected
+                                                {% endif %}
+                                            >
+                                                PRESENT
+                                            </option>
+
+
+                                            <!-- ABSENT -->
+
+                                            <option
+                                                value="ABSENT"
+                                                {% if status|upper == 'ABSENT' %}
+                                                    selected
+                                                {% endif %}
+                                            >
+                                                ABSENT
+                                            </option>
+
+
+                                            <!-- LATE -->
+
+                                            <option
+                                                value="LATE"
+                                                {% if status|upper == 'LATE' %}
+                                                    selected
+                                                {% endif %}
+                                            >
+                                                LATE
+                                            </option>
+
+
+                                        </select>
+
                                     </td>
+
+
                                 {% endfor %}
+
+
                             </tr>
+
+
                             {% else %}
+
+
+                            <!-- NO STUDENTS -->
+
                             <tr>
+
                                 <td
                                     colspan="14"
                                     class="student-no-data"
                                 >
+
                                     No students enrolled in this subject.
+
                                 </td>
+
                             </tr>
+
+
                             {% endfor %}
+
                         </tbody>
 
+
                     </table>
+
                 </div>
+
 
                 <p class="teacher-table-hint">
                     Scroll sideways to view all 13 weeks.
                 </p>
 
+
             </article>
+
+
             {% else %}
+
+
             <div class="content-card student-no-data">
+
                 No subjects available.
+
             </div>
+
+
             {% endfor %}
+
 
         </section>
 
     </main>
 
+
+    <!-- ========================================= -->
+    <!-- JAVASCRIPT -->
+    <!-- ========================================= -->
+
+
+    <!-- QR library only required when QR exists -->
+
     {% if token %}
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-    <script src="{{ url_for('static', filename='JS/teacher.js') }}"></script>
+
+    <script
+        src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"
+    ></script>
+
     {% endif %}
 
+
+    <!--
+        teacher.js is always loaded.
+
+        This allows it to handle:
+        1. QR generation
+        2. Manual attendance changes
+    -->
+
+    <script
+        src="{{ url_for('static', filename='JS/teacher.js') }}"
+    ></script>
+
+
 </body>
+
 </html>
