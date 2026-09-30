@@ -2,14 +2,18 @@ import sqlite3
 from pathlib import Path
 from contextlib import closing
 from datetime import date, timedelta
+from math import radians, sin, cos, sqrt, atan2
+
+
+DATABASE = Path(__file__).with_name('database.sqlite')
+
+# Student must be within this distance of the teacher
+MAX_DISTANCE_METERS = 50
 
 
 # =========================================================
 # DATABASE CONNECTION
 # =========================================================
-
-DATABASE = Path(__file__).with_name('database.sqlite')
-
 
 def connect():
     db = sqlite3.connect(DATABASE)
@@ -124,12 +128,6 @@ def class_students(subject_id):
 # ATTENDANCE WEEK CALCULATION
 # =========================================================
 
-# Existing dates are weekly.
-# The earliest attendance session for each class is Week 1.
-#
-# Weeks are calculated in Python instead of adding another
-# column to the database.
-
 def first_week(subject_id):
 
     rows = read(
@@ -199,7 +197,13 @@ def attendance_grid(subject_id):
 # START QR ATTENDANCE SESSION
 # =========================================================
 
-def start_session(subject_id, week, token):
+def start_session(
+    subject_id,
+    week,
+    token,
+    latitude,
+    longitude
+):
 
     session_date = (
         first_week(subject_id)
@@ -209,7 +213,6 @@ def start_session(subject_id, week, token):
     with closing(connect()) as db, db:
 
         # Close previous sessions for this subject
-
         db.execute(
             '''
             UPDATE attendance_sessions
@@ -219,9 +222,7 @@ def start_session(subject_id, week, token):
             (subject_id,)
         )
 
-
         # Check if a session already exists for this week
-
         existing = db.execute(
             '''
             SELECT session_id
@@ -235,7 +236,6 @@ def start_session(subject_id, week, token):
             )
         ).fetchone()
 
-
         # -------------------------------------------------
         # SESSION ALREADY EXISTS
         # -------------------------------------------------
@@ -248,24 +248,23 @@ def start_session(subject_id, week, token):
                 '''
                 UPDATE attendance_sessions
                 SET session_status = 'ACTIVE',
-                    ended_at = NULL
+                    ended_at = NULL,
+                    teacher_latitude = ?,
+                    teacher_longitude = ?
                 WHERE session_id = ?
                 ''',
-                (session_id,)
+                (
+                    latitude,
+                    longitude,
+                    session_id
+                )
             )
-
 
         # -------------------------------------------------
         # CREATE NEW SESSION
         # -------------------------------------------------
 
         else:
-
-            # The original database schema requires
-            # these timing fields.
-            #
-            # There are currently no timing rules in
-            # this MVP.
 
             cursor = db.execute(
                 '''
@@ -278,7 +277,9 @@ def start_session(subject_id, week, token):
                     on_time_cutoff,
                     late_cutoff,
                     clock_out_opens_at,
-                    clock_out_closes_at
+                    clock_out_closes_at,
+                    teacher_latitude,
+                    teacher_longitude
                 )
 
                 SELECT
@@ -289,7 +290,9 @@ def start_session(subject_id, week, token):
                     CURRENT_TIMESTAMP,
                     CURRENT_TIMESTAMP,
                     CURRENT_TIMESTAMP,
-                    CURRENT_TIMESTAMP
+                    CURRENT_TIMESTAMP,
+                    ?,
+                    ?
 
                 FROM class_sections
 
@@ -297,12 +300,13 @@ def start_session(subject_id, week, token):
                 ''',
                 (
                     session_date,
+                    latitude,
+                    longitude,
                     subject_id
                 )
             )
 
             session_id = cursor.lastrowid
-
 
         # -------------------------------------------------
         # REVOKE OLD QR CODES
@@ -317,7 +321,6 @@ def start_session(subject_id, week, token):
             (session_id,)
         )
 
-
         # -------------------------------------------------
         # CREATE NEW QR TOKEN
         # -------------------------------------------------
@@ -331,7 +334,8 @@ def start_session(subject_id, week, token):
                 expires_at
             )
 
-            VALUES (
+            VALUES
+            (
                 ?,
                 ?,
                 '9999-12-31 23:59:59'
@@ -345,15 +349,54 @@ def start_session(subject_id, week, token):
 
 
 # =========================================================
+# DISTANCE CALCULATION
+# =========================================================
+
+def calculate_distance(
+    lat1,
+    lon1,
+    lat2,
+    lon2
+):
+
+    # Earth's radius in metres
+    earth_radius = 6371000
+
+    lat1_rad = radians(lat1)
+    lat2_rad = radians(lat2)
+
+    difference_lat = radians(lat2 - lat1)
+    difference_lon = radians(lon2 - lon1)
+
+    a = (
+        sin(difference_lat / 2) ** 2
+        + cos(lat1_rad)
+        * cos(lat2_rad)
+        * sin(difference_lon / 2) ** 2
+    )
+
+    c = 2 * atan2(
+        sqrt(a),
+        sqrt(1 - a)
+    )
+
+    return earth_radius * c
+
+
+# =========================================================
 # STUDENT QR CHECK-IN
 # =========================================================
 
-def check_in(student_id, token):
+def check_in(
+    student_id,
+    token,
+    student_latitude,
+    student_longitude
+):
 
     with closing(connect()) as db, db:
 
         db.execute('BEGIN IMMEDIATE')
-
 
         # -------------------------------------------------
         # FIND ACTIVE QR SESSION
@@ -363,7 +406,9 @@ def check_in(student_id, token):
             '''
             SELECT
                 s.session_id,
-                s.section_id
+                s.section_id,
+                s.teacher_latitude,
+                s.teacher_longitude
 
             FROM qr_tokens q
 
@@ -377,7 +422,6 @@ def check_in(student_id, token):
             (token,)
         ).fetchone()
 
-
         if session is None:
 
             return (
@@ -385,6 +429,42 @@ def check_in(student_id, token):
                 'Invalid QR code.'
             )
 
+        # -------------------------------------------------
+        # CHECK TEACHER LOCATION
+        # -------------------------------------------------
+
+        if (
+            session['teacher_latitude'] is None
+            or session['teacher_longitude'] is None
+        ):
+
+            return (
+                False,
+                'Teacher location is unavailable.'
+            )
+
+        # -------------------------------------------------
+        # CALCULATE TEACHER-STUDENT DISTANCE
+        # -------------------------------------------------
+
+        distance = calculate_distance(
+            session['teacher_latitude'],
+            session['teacher_longitude'],
+            student_latitude,
+            student_longitude
+        )
+
+        # -------------------------------------------------
+        # LOCATION VERIFICATION
+        # -------------------------------------------------
+
+        if distance > MAX_DISTANCE_METERS:
+
+            return (
+                False,
+                f'You are too far away '
+                f'({distance:.0f} metres).'
+            )
 
         # -------------------------------------------------
         # CHECK STUDENT ENROLMENT
@@ -406,14 +486,12 @@ def check_in(student_id, token):
             )
         ).fetchone()
 
-
         if enrolled is None:
 
             return (
                 False,
                 'You are not enrolled in this subject.'
             )
-
 
         # -------------------------------------------------
         # CHECK EXISTING ATTENDANCE
@@ -434,14 +512,12 @@ def check_in(student_id, token):
             )
         ).fetchone()
 
-
         if existing:
 
             return (
                 False,
                 'Attendance already recorded.'
             )
-
 
         # -------------------------------------------------
         # RECORD PRESENT ATTENDANCE
@@ -475,10 +551,10 @@ def check_in(student_id, token):
             )
         )
 
-
         return (
             True,
-            'Attendance saved: PRESENT.'
+            f'Attendance saved: PRESENT. '
+            f'Distance: {distance:.0f} metres.'
         )
 
 
@@ -502,9 +578,7 @@ def update_attendance(
         + timedelta(weeks=week - 1)
     ).isoformat()
 
-
     with closing(connect()) as db, db:
-
 
         # -------------------------------------------------
         # FIND ATTENDANCE SESSION
@@ -525,16 +599,13 @@ def update_attendance(
             )
         ).fetchone()
 
-
         # There must already be an attendance session
         # for this week.
 
         if session is None:
             return False
 
-
         session_id = session['session_id']
-
 
         # -------------------------------------------------
         # CHECK WHETHER STUDENT ALREADY HAS A RECORD
@@ -555,14 +626,13 @@ def update_attendance(
             )
         ).fetchone()
 
-
         # -------------------------------------------------
         # TEACHER SELECTED "—"
         # -------------------------------------------------
 
         if status == '':
 
-            # Remove the attendance record if one exists.
+            # Remove attendance record if one exists.
 
             if existing:
 
@@ -578,7 +648,6 @@ def update_attendance(
                 )
 
             return True
-
 
         # -------------------------------------------------
         # UPDATE EXISTING ATTENDANCE
@@ -600,7 +669,6 @@ def update_attendance(
                     existing['attendance_id']
                 )
             )
-
 
         # -------------------------------------------------
         # CREATE MANUAL ATTENDANCE RECORD
@@ -635,6 +703,5 @@ def update_attendance(
                     status
                 )
             )
-
 
         return True

@@ -25,7 +25,11 @@ def select_user_page():
 
 @app.route('/select-student', methods=['POST'])
 def select_student():
-    student_id = request.form.get('student_id', type=int)
+
+    student_id = request.form.get(
+        'student_id',
+        type=int
+    )
 
     if student_id is None:
         return 'Please select a student.', 400
@@ -44,6 +48,7 @@ def select_student():
 
 @app.route('/student-login')
 def student_login_page():
+
     student_id = request.args.get(
         'student_id',
         type=int
@@ -135,22 +140,43 @@ def scan(student_id):
 
     data = request.get_json(silent=True)
 
-    token = (
-        data.get('token')
-        if isinstance(data, dict)
-        else None
-    )
+    if not isinstance(data, dict):
+        return jsonify(
+            success=False,
+            message='Invalid request.'
+        ), 400
+
+    token = data.get('token')
+    latitude = data.get('latitude')
+    longitude = data.get('longitude')
 
     if not isinstance(token, str) or not token:
-
         return jsonify(
             success=False,
             message='Missing QR code.'
         ), 400
 
+    # Student location will be required for attendance.
+    try:
+        latitude = float(latitude)
+        longitude = float(longitude)
+    except (TypeError, ValueError):
+        return jsonify(
+            success=False,
+            message='Could not get your location.'
+        ), 400
+
+    if not (-90 <= latitude <= 90 and -180 <= longitude <= 180):
+        return jsonify(
+            success=False,
+            message='Invalid location.'
+        ), 400
+
     success, message = db.check_in(
         student_id,
-        token
+        token,
+        latitude,
+        longitude
     )
 
     return jsonify(
@@ -172,7 +198,6 @@ def select_teacher():
     )
 
     if teacher_id is None:
-
         return 'Please select a teacher.', 400
 
     return redirect(
@@ -196,7 +221,6 @@ def teacher_login_page():
     )
 
     if teacher_id is None:
-
         return redirect(
             url_for('select_user_page')
         )
@@ -279,7 +303,6 @@ def teacher_page(teacher_id):
 
     session_subject = None
 
-
     # -----------------------------------------------------
     # START QR ATTENDANCE SESSION
     # -----------------------------------------------------
@@ -296,6 +319,10 @@ def teacher_page(teacher_id):
             type=int
         )
 
+        # Get teacher location from the form
+        latitude = request.form.get('latitude')
+        longitude = request.form.get('longitude')
+
         valid_subject_ids = [
             subject['subject_id']
             for subject in subjects
@@ -305,32 +332,49 @@ def teacher_page(teacher_id):
             subject_id not in valid_subject_ids
             or week not in range(1, 14)
         ):
-
             return (
                 'Invalid subject or week',
                 400
             )
 
-        # Generate unique QR token
+        # Make sure teacher location was received
+        try:
+            latitude = float(latitude)
+            longitude = float(longitude)
+        except (TypeError, ValueError):
+            return (
+                'Location is required to start attendance.',
+                400
+            )
 
+        # Basic coordinate validation
+        if not (
+            -90 <= latitude <= 90
+            and -180 <= longitude <= 180
+        ):
+            return (
+                'Invalid teacher location.',
+                400
+            )
+
+        # Generate unique QR token
         token = secrets.token_urlsafe(16)
 
-        # Create/start session in database
-
+        # Create/start session and save teacher location
         db.start_session(
             subject_id,
             week,
-            token
+            token,
+            latitude,
+            longitude
         )
 
         # Find the selected subject
-
         session_subject = next(
             subject
             for subject in subjects
             if subject['subject_id'] == subject_id
         )
-
 
     # -----------------------------------------------------
     # LOAD ATTENDANCE TABLE
@@ -350,7 +394,6 @@ def teacher_page(teacher_id):
         students[subject_id] = (
             db.class_students(subject_id)
         )
-
 
     # -----------------------------------------------------
     # DISPLAY TEACHER DASHBOARD
@@ -379,7 +422,6 @@ def teacher_page(teacher_id):
 def update_attendance():
 
     # Receive JSON sent by teacher.js
-
     data = request.get_json(silent=True)
 
     if not isinstance(data, dict):
@@ -389,7 +431,6 @@ def update_attendance():
             message='Invalid request.'
         ), 400
 
-
     # -----------------------------------------------------
     # GET ATTENDANCE INFORMATION
     # -----------------------------------------------------
@@ -398,7 +439,6 @@ def update_attendance():
     subject_id = data.get('subject_id')
     week = data.get('week')
     status = data.get('status', '')
-
 
     # Convert IDs/week into integers
 
@@ -415,7 +455,6 @@ def update_attendance():
             message='Invalid student, subject or week.'
         ), 400
 
-
     # -----------------------------------------------------
     # VALIDATE WEEK
     # -----------------------------------------------------
@@ -426,7 +465,6 @@ def update_attendance():
             success=False,
             message='Invalid week.'
         ), 400
-
 
     # -----------------------------------------------------
     # VALIDATE ATTENDANCE STATUS
@@ -446,7 +484,6 @@ def update_attendance():
             message='Invalid attendance status.'
         ), 400
 
-
     # -----------------------------------------------------
     # UPDATE DATABASE
     # -----------------------------------------------------
@@ -458,7 +495,6 @@ def update_attendance():
         status
     )
 
-
     if not success:
 
         return jsonify(
@@ -468,7 +504,6 @@ def update_attendance():
                 'for this week.'
             )
         ), 400
-
 
     # -----------------------------------------------------
     # SUCCESS
