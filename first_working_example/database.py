@@ -31,6 +31,38 @@ def read(sql, values=()):
 # USERS
 # =========================================================
 
+def get_user_by_email(email):
+    rows = read(
+        '''
+        SELECT
+            u.user_id,
+            u.full_name,
+            u.email,
+            u.password_hash,
+            u.role,
+            u.account_status,
+            s.student_id,
+            l.lecturer_id
+
+        FROM users u
+
+        LEFT JOIN students s
+            ON s.user_id = u.user_id
+
+        LEFT JOIN lecturers l
+            ON l.user_id = u.user_id
+
+        WHERE LOWER(u.email) = LOWER(?)
+        LIMIT 1
+        ''',
+        (email,)
+    )
+
+    if not rows:
+        return None
+
+    return rows[0]
+
 def get_students():
     return read(
         '''

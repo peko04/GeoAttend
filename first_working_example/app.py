@@ -10,12 +10,63 @@ app = Flask(__name__)
 # HOME PAGE
 # =========================================================
 
-@app.route('/')
-def select_user_page():
+@app.route('/', methods=['GET', 'POST'])
+def login():
+
+    error = None
+
+    if request.method == 'POST':
+
+        email = request.form.get('email', '').strip()
+        password = request.form.get('password', '')
+
+        if not email or not password:
+            error = 'Please enter your email and password.'
+
+        else:
+            user = db.get_user_by_email(email)
+
+            if user is None:
+                error = 'Invalid email or password.'
+
+            elif user['account_status'] != 'ACTIVE':
+                error = 'This account is not active.'
+
+
+            elif user['password_hash'] != password:
+
+                error = 'Invalid email or password.'
+
+            elif user['role'] == 'STUDENT':
+
+                if user['student_id'] is None:
+                    error = 'Student account is not configured correctly.'
+                else:
+                    return redirect(
+                        url_for(
+                            'student_page',
+                            student_id=user['student_id']
+                        )
+                    )
+
+            elif user['role'] == 'LECTURER':
+
+                if user['lecturer_id'] is None:
+                    error = 'Lecturer account is not configured correctly.'
+                else:
+                    return redirect(
+                        url_for(
+                            'teacher_page',
+                            teacher_id=user['lecturer_id']
+                        )
+                    )
+
+            else:
+                error = 'Unknown account type.'
+
     return render_template(
         'login.html',
-        students=db.get_students(),
-        lecturers=db.get_lecturers()
+        error=error
     )
 
 

@@ -1,168 +1,113 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
-
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <title>GeoAttend Login</title>
 
-    <link
-        rel="stylesheet"
-        href="{{ url_for('static', filename='CSS/style.css') }}"
-    >
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f6f8;
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .login-box {
+            background: white;
+            width: 350px;
+            padding: 35px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            text-align: center;
+            margin-top: 0;
+        }
+
+        .subtitle {
+            text-align: center;
+            margin-bottom: 25px;
+            color: #666;
+        }
+
+        label {
+            display: block;
+            margin-top: 15px;
+            margin-bottom: 5px;
+        }
+
+        input {
+            width: 100%;
+            padding: 10px;
+            box-sizing: border-box;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        button {
+            width: 100%;
+            margin-top: 20px;
+            padding: 11px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .error {
+            background: #ffe5e5;
+            padding: 10px;
+            margin-bottom: 15px;
+            border-radius: 5px;
+        }
+    </style>
 </head>
 
-<body class="login-body">
+<body>
 
-    <main class="login-wrapper">
+<div class="login-box">
 
-        <header class="login-brand">
+    <h1>GeoAttend</h1>
+    <p class="subtitle">Sign in to your account</p>
 
-            <h1>GeoAttend</h1>
+    {% if error %}
+        <div class="error">
+            {{ error }}
+        </div>
+    {% endif %}
 
-            <p>
-                Smart and simple university attendance
-            </p>
+    <form method="POST" action="{{ url_for('login') }}">
 
-        </header>
+        <label for="email">Email</label>
+        <input
+            type="email"
+            id="email"
+            name="email"
+            required
+            autocomplete="email"
+        >
 
+        <label for="password">Password</label>
+        <input
+            type="password"
+            id="password"
+            name="password"
+            required
+            autocomplete="current-password"
+        >
 
-        <section class="login-card">
+        <button type="submit">
+            Login
+        </button>
 
-            <!-- Left information section -->
-            <div class="login-information">
+    </form>
 
-                <h2>
-                    Welcome to GeoAttend
-                </h2>
-
-                <p>
-                    Select your account to view attendance,
-                    scan a classroom QR code, or start a new
-                    attendance session.
-                </p>
-
-            </div>
-
-
-            <!-- Right selection section -->
-            <div class="login-form-area">
-
-                <h2>
-                    Select your portal
-                </h2>
-
-                <p class="login-subtitle">
-                    Choose a student or teacher account.
-                </p>
-
-
-                <!-- Student selection -->
-                <form
-                    action="{{ url_for('select_student') }}"
-                    method="POST"
-                >
-
-                    <div class="form-group">
-
-                        <label for="studentId">
-                            Student
-                        </label>
-
-                        <select
-                            class="form-control"
-                            id="studentId"
-                            name="student_id"
-                            required
-                        >
-
-                            {% for student in students %}
-
-                                <option
-                                    value="{{ student['student_id'] }}"
-                                >
-                                    {{ student['full_name'] }}
-                                </option>
-
-                            {% endfor %}
-
-                        </select>
-
-                    </div>
-
-
-                    <button
-                        class="login-button"
-                        type="submit"
-                    >
-                        Enter Student Portal
-                    </button>
-
-                </form>
-
-
-                <div
-                    style="
-                        margin: 28px 0;
-                        border-top: 1px solid #dce3eb;
-                    "
-                ></div>
-
-
-                <!-- Teacher selection -->
-                <form
-                    action="{{ url_for('select_teacher') }}"
-                    method="POST"
-                >
-
-                    <div class="form-group">
-
-                        <label for="teacherId">
-                            Teacher
-                        </label>
-
-                        <select
-                            class="form-control"
-                            id="teacherId"
-                            name="lecturer_id"
-                            required
-                        >
-
-                            {% for lecturer in lecturers %}
-
-                                <option
-                                    value="{{ lecturer['lecturer_id'] }}"
-                                >
-                                    {{ lecturer['full_name'] }}
-                                </option>
-
-                            {% endfor %}
-
-                        </select>
-
-                    </div>
-
-
-                    <button
-                        class="login-button teacher-button"
-                        type="submit"
-                    >
-                        Enter Teacher Portal
-                    </button>
-
-                </form>
-
-            </div>
-
-        </section>
-
-    </main>
+</div>
 
 </body>
-
 </html>

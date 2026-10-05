@@ -29,7 +29,7 @@
     {% endfor %}
 
     <header class="top-header">
-        <a class="logo" href="{{ url_for('select_user_page') }}">
+        <a class="logo" href="{{ url_for('login') }}">
             GeoAttend
         </a>
 
@@ -37,10 +37,9 @@
             <a href="#overview">Dashboard</a>
             <a href="#scan-attendance">Scan Attendance</a>
             <a href="#history">History</a>
-            <a href="{{ url_for('select_user_page') }}">Back to portals</a>
+            <a href="{{ url_for('login') }}">Back to portals</a>
         </nav>
     </header>
-
     <main class="dashboard-container" id="overview">
 
         <div class="page-heading">
