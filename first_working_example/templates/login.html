@@ -1,113 +1,127 @@
+
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
 
     <title>GeoAttend Login</title>
 
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background: #f4f6f8;
-            margin: 0;
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-
-        .login-box {
-            background: white;
-            width: 350px;
-            padding: 35px;
-            border-radius: 10px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-        }
-
-        h1 {
-            text-align: center;
-            margin-top: 0;
-        }
-
-        .subtitle {
-            text-align: center;
-            margin-bottom: 25px;
-            color: #666;
-        }
-
-        label {
-            display: block;
-            margin-top: 15px;
-            margin-bottom: 5px;
-        }
-
-        input {
-            width: 100%;
-            padding: 10px;
-            box-sizing: border-box;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-        }
-
-        button {
-            width: 100%;
-            margin-top: 20px;
-            padding: 11px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-
-        .error {
-            background: #ffe5e5;
-            padding: 10px;
-            margin-bottom: 15px;
-            border-radius: 5px;
-        }
-    </style>
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='CSS/style.css') }}"
+    >
 </head>
 
-<body>
+<body class="login-body">
 
-<div class="login-box">
+    <main class="login-wrapper">
 
-    <h1>GeoAttend</h1>
-    <p class="subtitle">Sign in to your account</p>
+        <header class="login-brand">
 
-    {% if error %}
-        <div class="error">
-            {{ error }}
-        </div>
-    {% endif %}
+            <h1>GeoAttend</h1>
 
-    <form method="POST" action="{{ url_for('login') }}">
+            <p>
+                Smart and simple university attendance
+            </p>
 
-        <label for="email">Email</label>
-        <input
-            type="email"
-            id="email"
-            name="email"
-            required
-            autocomplete="email"
-        >
+        </header>
 
-        <label for="password">Password</label>
-        <input
-            type="password"
-            id="password"
-            name="password"
-            required
-            autocomplete="current-password"
-        >
 
-        <button type="submit">
-            Login
-        </button>
+        <section class="login-card">
 
-    </form>
+            <!-- Left information section -->
+            <div class="login-information">
 
-</div>
+                <h2>
+                    Welcome to GeoAttend
+                </h2>
+
+                <p>
+                    Log in to view attendance,
+                    scan a classroom QR code, or start a new
+                    attendance session.
+                </p>
+
+            </div>
+
+
+            <!-- Right login section -->
+            <div class="login-form-area">
+
+                <h2>
+                    Login
+                </h2>
+
+                <p class="login-subtitle">
+                    Enter your email and password.
+                </p>
+
+                {% if error %}
+                    <p class="error">{{ error }}</p>
+                {% endif %}
+
+                <form
+                    action="{{ url_for('login') }}"
+                    method="POST"
+                >
+
+                    <div class="form-group">
+
+                        <label for="email">
+                            Email
+                        </label>
+
+                        <input
+                            class="form-control"
+                            type="email"
+                            id="email"
+                            name="email"
+                            required
+                            autocomplete="email"
+                        >
+
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <label for="password">
+                            Password
+                        </label>
+
+                        <input
+                            class="form-control"
+                            type="password"
+                            id="password"
+                            name="password"
+                            required
+                            autocomplete="current-password"
+                        >
+
+                    </div>
+
+
+                    <button
+                        class="login-button"
+                        type="submit"
+                    >
+                        Login
+                    </button>
+
+                </form>
+
+            </div>
+
+        </section>
+
+    </main>
 
 </body>
+
 </html>
