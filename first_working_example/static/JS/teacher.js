@@ -120,7 +120,8 @@ if (qrCode) {
 
     new QRCode(qrCode, {
 
-        text: qrCode.dataset.token,
+        // QR now contains the attendance page URL
+        text: qrCode.dataset.url,
         width: 200,
         height: 200
 

@@ -340,6 +340,7 @@ def teacher_page(teacher_id):
     )
 
     token = None
+    attendance_url = None
 
     selected_subject = request.form.get(
         'subject_id',
@@ -420,6 +421,11 @@ def teacher_page(teacher_id):
             longitude
         )
 
+        attendance_url = (
+            f"{request.host_url.rstrip('/')}"
+            f"/attendance/{token}"
+        )
+
         # Find the selected subject
         session_subject = next(
             subject
@@ -456,6 +462,7 @@ def teacher_page(teacher_id):
         grids=grids,
         students=students,
         token=token,
+        attendance_url=attendance_url,
         selected_subject=selected_subject,
         selected_week=selected_week,
         session_subject=session_subject
