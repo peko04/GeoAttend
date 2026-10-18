@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GeoAttend | Admin</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='CSS/admin.css') }}">
+</head>
+<body>
+    <header class="topbar">
+        <div class="brand">GeoAttend <span>Admin</span></div>
+        <nav aria-label="Admin sections">
+            <a href="#students">Students</a>
+            <a href="#lecturers">Lecturers</a>
+            <a href="#classes">Classes</a>
+            <a href="#enrolments">Enrolments</a>
+        </nav>
+        <form method="post" action="{{ url_for('geo_admin.logout') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+            <button type="submit" class="logout">Sign out</button>
+        </form>
+    </header>
+
+    <main class="container">
+        <div class="page-title">
+            <div><h1>Administration</h1><p>Manage students, staff, classes and enrolments.</p></div>
+            <span class="pill">GeoAttend</span>
+        </div>
+
+        {% for category, text in get_flashed_messages(with_categories=True) %}
+            <div role="alert" class="alert {{ category }}">{{ text }}</div>
+        {% endfor %}
+
+        <section class="stats" aria-label="Summary">
+            <div class="stat"><span>Students</span><strong>{{ students|length }}</strong></div>
+            <div class="stat"><span>Lecturers</span><strong>{{ lecturers|length }}</strong></div>
+            <div class="stat"><span>Class sections</span><strong>{{ sections|length }}</strong></div>
+            <div class="stat"><span>Active enrolments</span><strong>{{ enrolments|selectattr('enrolment_status', 'equalto', 'ACTIVE')|list|length }}</strong></div>
+        </section>
+
+        <section class="panel" id="students">
+            <div class="section-heading"><div><h2>Students</h2><p>Create an account or update an existing student.</p></div></div>
+            <form class="inline-form" method="post" action="{{ url_for('geo_admin.add_student') }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                <label>Full name <input name="full_name" maxlength="120" required placeholder="Student name"></label>
+                <label>Email <input name="email" type="email" required placeholder="student@example.com"></label>
+                <label>Student number <input name="number" maxlength="40" required placeholder="S1001"></label>
+                <label>Password <input type="password" name="password" minlength="10" required autocomplete="new-password"></label>
+                <button type="submit">Add student</button>
+            </form>
+            <div class="table-scroll"><table><thead><tr><th>Student</th><th>Email</th><th>Number</th><th>Status</th><th>Manage</th></tr></thead><tbody>
+            {% for s in students %}<tr>
+                <td>{{ s.full_name }}</td><td>{{ s.email }}</td><td>{{ s.student_number }}</td>
+                <td><span class="status {{ s.account_status|lower }}">{{ s.account_status }}</span></td>
+                <td><details><summary>Edit</summary>
+                    <form class="edit-form" action="{{ url_for('geo_admin.edit_user', user_id=s.user_id) }}" method="post">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                        <label>Name <input name="full_name" value="{{ s.full_name }}" required></label>
+                        <label>Email <input name="email" type="email" value="{{ s.email }}" required></label>
+                        <label>Status <select name="status"><option value="ACTIVE" {% if s.account_status == 'ACTIVE' %}selected{% endif %}>Active</option><option value="INACTIVE" {% if s.account_status == 'INACTIVE' %}selected{% endif %}>Inactive</option></select></label>
+                        <label>New password (optional) <input type="password" name="password" placeholder="Leave blank to keep current"></label>
+                        <button type="submit">Save changes</button>
+                    </form></details></td>
+            </tr>{% else %}<tr><td colspan="5">No students found.</td></tr>{% endfor %}
+            </tbody></table></div>
+        </section>
+
+        <section class="panel" id="lecturers">
+            <div class="section-heading"><div><h2>Lecturers</h2><p>Lecturer accounts are required before creating new classes.</p></div></div>
+            <form class="inline-form" method="post" action="{{ url_for('geo_admin.add_lecturer') }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                <label>Full name <input name="full_name" maxlength="120" required></label>
+                <label>Email <input name="email" type="email" required></label>
+                <label>Staff number <input name="number" maxlength="40" required></label>
+                <label>Password <input type="password" name="password" minlength="10" required autocomplete="new-password"></label>
+                <button type="submit">Add lecturer</button>
+            </form>
+            <div class="table-scroll"><table><thead><tr><th>Lecturer</th><th>Email</th><th>Staff number</th><th>Status</th><th>Manage</th></tr></thead><tbody>
+            {% for l in lecturers %}<tr>
+                <td>{{ l.full_name }}</td><td>{{ l.email }}</td><td>{{ l.staff_number }}</td>
+                <td><span class="status {{ l.account_status|lower }}">{{ l.account_status }}</span></td>
+                <td><details><summary>Edit</summary>
+                    <form class="edit-form" action="{{ url_for('geo_admin.edit_user', user_id=l.user_id) }}" method="post">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                        <label>Name <input name="full_name" value="{{ l.full_name }}" required></label>
+                        <label>Email <input name="email" type="email" value="{{ l.email }}" required></label>
+                        <label>Status <select name="status"><option value="ACTIVE" {% if l.account_status == 'ACTIVE' %}selected{% endif %}>Active</option><option value="INACTIVE" {% if l.account_status == 'INACTIVE' %}selected{% endif %}>Inactive</option></select></label>
+                        <label>New password (optional) <input type="password" name="password" placeholder="Leave blank to keep current"></label>
+                        <button type="submit">Save changes</button>
+                    </form></details></td>
+            </tr>{% else %}<tr><td colspan="5">No lecturers found.</td></tr>{% endfor %}
+            </tbody></table></div>
+        </section>
+
+        <section class="panel" id="classes">
+            <div class="section-heading"><div><h2>Classes and courses</h2><p>Add a course first, then create a class section using an existing lecturer and room.</p></div></div>
+            <h3>New course</h3>
+            <form class="inline-form smaller" method="post" action="{{ url_for('geo_admin.add_course') }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                <label>Course code <input name="course_code" placeholder="COMP101" required></label>
+                <label>Course name <input name="course_name" placeholder="Introduction to Computing" required></label>
+                <button type="submit">Add course</button>
+            </form>
+            <h3>New class section</h3>
+            <form class="inline-form" method="post" action="{{ url_for('geo_admin.add_class') }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                <label>Course <select name="course_id" required><option value="">Choose course</option>{% for c in courses %}<option value="{{ c.course_id }}">{{ c.course_code }} — {{ c.course_name }}</option>{% endfor %}</select></label>
+                <label>Lecturer <select name="lecturer_id" required><option value="">Choose lecturer</option>{% for l in lecturers %}<option value="{{ l.lecturer_id }}">{{ l.full_name }}</option>{% endfor %}</select></label>
+                <label>Room <select name="room_id" required><option value="">Choose room</option>{% for r in rooms %}<option value="{{ r.room_id }}">{{ r.room_name }}</option>{% endfor %}</select></label>
+                <label>Semester <input name="semester" placeholder="Semester 2" maxlength="40" required></label>
+                <label>Year <input name="academic_year" value="2026" pattern="[0-9]{4}" required></label>
+                <label>Day <select name="day_of_week" required>{% for day in days %}<option value="{{ day }}">{{ day|title }}</option>{% endfor %}</select></label>
+                <label>Start <input type="time" name="start_time" required></label>
+                <label>End <input type="time" name="end_time" required></label>
+                <button type="submit">Create class</button>
+            </form>
+            <div class="table-scroll"><table><thead><tr><th>Course</th><th>Lecturer</th><th>Room</th><th>Semester</th><th>Day</th><th>Time</th></tr></thead><tbody>
+            {% for s in sections %}<tr><td>{{ s.course_code }} — {{ s.course_name }}</td><td>{{ s.lecturer_name }}</td><td>{{ s.room_name }}</td><td>{{ s.semester }} {{ s.academic_year }}</td><td>{{ s.day_of_week|title }}</td><td>{{ s.start_time }}–{{ s.end_time }}</td></tr>
+            {% else %}<tr><td colspan="6">No class sections.</td></tr>{% endfor %}
+            </tbody></table></div>
+        </section>
+
+        <section class="panel" id="enrolments">
+            <div class="section-heading"><div><h2>Enrolments</h2><p>Assign students to classes or mark an enrolment as dropped.</p></div></div>
+            <form class="inline-form smaller" method="post" action="{{ url_for('geo_admin.add_enrolment') }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                <label>Student <select name="student_id" required><option value="">Choose student</option>{% for s in students %}<option value="{{ s.student_id }}">{{ s.full_name }} ({{ s.student_number }})</option>{% endfor %}</select></label>
+                <label>Class <select name="section_id" required><option value="">Choose class</option>{% for s in sections %}<option value="{{ s.section_id }}">{{ s.course_code }} — {{ s.semester }} {{ s.academic_year }} (#{{ s.section_id }})</option>{% endfor %}</select></label>
+                <button type="submit">Enrol student</button>
+            </form>
+            <div class="table-scroll"><table><thead><tr><th>Student</th><th>Class</th><th>Status</th><th>Change</th></tr></thead><tbody>
+            {% for e in enrolments %}<tr><td>{{ e.student_name }}</td><td>{{ e.course_code }} (#{{ e.section_id }})</td><td>{{ e.enrolment_status }}</td><td>
+                <form method="post" action="{{ url_for('geo_admin.enrolment_status', enrolment_id=e.enrolment_id) }}" class="mini-form">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                    <select name="status"><option value="ACTIVE" {% if e.enrolment_status == 'ACTIVE' %}selected{% endif %}>Active</option><option value="DROPPED" {% if e.enrolment_status == 'DROPPED' %}selected{% endif %}>Dropped</option></select>
+                    <button type="submit">Update</button>
+                </form></td></tr>
+            {% else %}<tr><td colspan="4">No enrolments yet.</td></tr>{% endfor %}
+            </tbody></table></div>
+        </section>
+    </main>
+</body>
+</html>

@@ -1,11 +1,13 @@
+from admin import register_admin, verify_password
+import os
 from flask import Flask, render_template, request, redirect, url_for, jsonify
 import secrets
 import database as db
 
 
 app = Flask(__name__)
-
-
+app.secret_key = os.environ.get('FLASK_SECRET_KEY') or secrets.token_hex(32)
+register_admin(app)
 # =========================================================
 # HOME PAGE
 # =========================================================
@@ -33,7 +35,7 @@ def login():
                 error = 'This account is not active.'
 
 
-            elif user['password_hash'] != password:
+            elif not verify_password(user['password_hash'], password):
 
                 error = 'Invalid email or password.'
 
