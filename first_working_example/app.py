@@ -1,24 +1,83 @@
-from admin import register_admin, verify_password
+
 import os
-from flask import Flask, render_template, request, redirect, url_for, jsonify
+import re
 import secrets
+from urllib.parse import urlparse
+
+from flask import (
+    Flask, jsonify, redirect, render_template,
+    render_template_string, request, session, url_for
+)
+
 import database as db
+from admin import register_admin, verify_password
 
 
 app = Flask(__name__)
-app.secret_key = os.environ.get('FLASK_SECRET_KEY') or secrets.token_hex(32)
+
+app.secret_key = (
+    os.environ.get('FLASK_SECRET_KEY')
+    or secrets.token_hex(32)
+)
+
+app.config['SESSION_COOKIE_HTTPONLY'] = True
+app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+app.config['SESSION_COOKIE_SECURE'] = (
+    os.environ.get('FLASK_SECURE_COOKIES') == '1'
+)
+
 register_admin(app)
-# =========================================================
-# HOME PAGE
-# =========================================================
+
+
+# QR TOKEN
+
+def extract_token(value):
+    if not isinstance(value, str):
+        return None
+
+    value = value.strip()
+
+    if value.startswith(('https://', 'http://')):
+        value = urlparse(value).path
+
+        if not value.startswith('/attendance/'):
+            return None
+
+        value = value[len('/attendance/'):].strip('/')
+
+    if not re.fullmatch(r'[A-Za-z0-9_-]{10,128}', value):
+        return None
+
+    return value
+
+
+def student_logged_in(student_id=None):
+    if session.get('role') != 'STUDENT':
+        return False
+
+    return (
+        student_id is None
+        or session.get('student_id') == student_id
+    )
+
+
+def lecturer_logged_in(teacher_id=None):
+    if session.get('role') != 'LECTURER':
+        return False
+
+    return (
+        teacher_id is None
+        or session.get('lecturer_id') == teacher_id
+    )
+
+
+# LOGIN
 
 @app.route('/', methods=['GET', 'POST'])
 def login():
-
     error = None
 
     if request.method == 'POST':
-
         email = request.form.get('email', '').strip()
         password = request.form.get('password', '')
 
@@ -31,147 +90,81 @@ def login():
             if user is None:
                 error = 'Invalid email or password.'
 
+            elif not verify_password(
+                user['password_hash'], password
+            ):
+                error = 'Invalid email or password.'
+
             elif user['account_status'] != 'ACTIVE':
                 error = 'This account is not active.'
 
+            elif (
+                user['role'] == 'STUDENT'
+                and user['student_id'] is not None
+            ):
+                pending = session.get('pending_attendance')
 
-            elif not verify_password(user['password_hash'], password):
+                session.clear()
+                session['user_id'] = user['user_id']
+                session['role'] = 'STUDENT'
+                session['student_id'] = user['student_id']
 
-                error = 'Invalid email or password.'
-
-            elif user['role'] == 'STUDENT':
-
-                if user['student_id'] is None:
-                    error = 'Student account is not configured correctly.'
-                else:
+                if pending:
                     return redirect(
-                        url_for(
-                            'student_page',
-                            student_id=user['student_id']
-                        )
+                        url_for('attendance_page', token=pending)
                     )
 
-            elif user['role'] == 'LECTURER':
-
-                if user['lecturer_id'] is None:
-                    error = 'Lecturer account is not configured correctly.'
-                else:
-                    return redirect(
-                        url_for(
-                            'teacher_page',
-                            teacher_id=user['lecturer_id']
-                        )
+                return redirect(
+                    url_for(
+                        'student_page',
+                        student_id=user['student_id']
                     )
+                )
+
+            elif (
+                user['role'] == 'LECTURER'
+                and user['lecturer_id'] is not None
+            ):
+                session.clear()
+                session['user_id'] = user['user_id']
+                session['role'] = 'LECTURER'
+                session['lecturer_id'] = user['lecturer_id']
+
+                return redirect(
+                    url_for(
+                        'teacher_page',
+                        teacher_id=user['lecturer_id']
+                    )
+                )
 
             else:
-                error = 'Unknown account type.'
+                error = 'This account is not configured correctly.'
 
-    return render_template(
-        'login.html',
-        error=error
-    )
+    return render_template('login.html', error=error)
 
 
-# =========================================================
-# STUDENT
-# =========================================================
+# LOGOUT
 
-@app.route('/select-student', methods=['POST'])
-def select_student():
-
-    student_id = request.form.get(
-        'student_id',
-        type=int
-    )
-
-    if student_id is None:
-        return 'Please select a student.', 400
-
-    return redirect(
-        url_for(
-            'student_login_page',
-            student_id=student_id
-        )
-    )
+@app.route('/logout')
+def logout():
+    session.clear()
+    return redirect(url_for('login'))
 
 
-# ---------------------------------------------------------
-# STUDENT LOGIN PAGE
-# ---------------------------------------------------------
-
-@app.route('/student-login')
-def student_login_page():
-
-    student_id = request.args.get(
-        'student_id',
-        type=int
-    )
-
-    if student_id is None:
-        return redirect(
-            url_for('select_user_page')
-        )
-
-    return render_template(
-        'student-login.html',
-        student_id=student_id
-    )
-
-
-# ---------------------------------------------------------
-# STUDENT LOGIN SUBMIT
-# ---------------------------------------------------------
-
-@app.route('/student-login-submit', methods=['POST'])
-def student_login_submit():
-
-    student_id = request.form.get(
-        'student_id',
-        type=int
-    )
-
-    email = request.form.get(
-        'email',
-        ''
-    ).strip()
-
-    password = request.form.get(
-        'password',
-        ''
-    )
-
-    if student_id is None or not email or not password:
-        return 'Please enter your email and password.', 400
-
-    # Temporary page-flow test.
-    # Real account checking is not connected yet.
-
-    return redirect(
-        url_for(
-            'student_page',
-            student_id=student_id
-        )
-    )
-
-
-# ---------------------------------------------------------
 # STUDENT DASHBOARD
-# ---------------------------------------------------------
 
 @app.route('/student/<int:student_id>')
 def student_page(student_id):
+    if not student_logged_in(student_id):
+        return redirect(url_for('login'))
 
     subjects = db.student_subjects(student_id)
 
     grids = {}
 
     for subject in subjects:
-
         subject_id = subject['subject_id']
-
-        grids[subject_id] = db.attendance_grid(
-            subject_id
-        )
+        grids[subject_id] = db.attendance_grid(subject_id)
 
     return render_template(
         'student.html',
@@ -181,15 +174,18 @@ def student_page(student_id):
     )
 
 
-# ---------------------------------------------------------
-# STUDENT QR CHECK-IN
-# ---------------------------------------------------------
+# QR CHECK-IN
 
 @app.route(
     '/student/<int:student_id>/scan',
     methods=['POST']
 )
 def scan(student_id):
+    if not student_logged_in(student_id):
+        return jsonify(
+            success=False,
+            message='Please log in as this student.'
+        ), 403
 
     data = request.get_json(silent=True)
 
@@ -199,27 +195,28 @@ def scan(student_id):
             message='Invalid request.'
         ), 400
 
-    token = data.get('token')
-    latitude = data.get('latitude')
-    longitude = data.get('longitude')
+    token = extract_token(data.get('token'))
 
-    if not isinstance(token, str) or not token:
+    if token is None:
         return jsonify(
             success=False,
-            message='Missing QR code.'
+            message='Invalid QR code.'
         ), 400
 
-    # Student location will be required for attendance.
     try:
-        latitude = float(latitude)
-        longitude = float(longitude)
+        latitude = float(data.get('latitude'))
+        longitude = float(data.get('longitude'))
+
     except (TypeError, ValueError):
         return jsonify(
             success=False,
             message='Could not get your location.'
         ), 400
 
-    if not (-90 <= latitude <= 90 and -180 <= longitude <= 180):
+    if not (
+        -90 <= latitude <= 90
+        and -180 <= longitude <= 180
+    ):
         return jsonify(
             success=False,
             message='Invalid location.'
@@ -238,111 +235,175 @@ def scan(student_id):
     )
 
 
-# =========================================================
-# TEACHER
-# =========================================================
+# QR LINK PAGE
 
-@app.route('/select-teacher', methods=['POST'])
-def select_teacher():
+ATTENDANCE_HTML = '''
+<!DOCTYPE html>
+<html lang="en">
 
-    teacher_id = request.form.get(
-        'lecturer_id',
-        type=int
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1">
+
+    <title>Record Attendance | GeoAttend</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='CSS/style.css') }}">
+</head>
+
+<body class="login-body">
+
+    <main class="login-wrapper">
+
+        <header class="login-brand">
+            <h1>GeoAttend</h1>
+            <p>QR Attendance</p>
+        </header>
+
+        <section class="login-card"
+                 style="display:block;max-width:600px;margin:auto;padding:32px;">
+
+            <h2>Confirm your attendance</h2>
+
+            <p>
+                Tap the button below and allow
+                location access to record attendance.
+            </p>
+
+            <button class="login-button"
+                    id="checkin"
+                    type="button">
+                Confirm attendance
+            </button>
+
+            <p id="status"
+               role="status"
+               aria-live="polite"></p>
+
+            <p>
+                <a href="{{ url_for('student_page', student_id=student_id) }}">
+                    Back to student dashboard
+                </a>
+            </p>
+
+        </section>
+
+    </main>
+
+    <script>
+        document.getElementById('checkin')
+            .addEventListener('click', function () {
+
+            const button = this;
+            const status = document.getElementById('status');
+
+            button.disabled = true;
+            status.textContent = 'Checking location...';
+
+            if (!navigator.geolocation) {
+                status.textContent =
+                    'Your browser does not support location.';
+
+                button.disabled = false;
+                return;
+            }
+
+            navigator.geolocation.getCurrentPosition(
+
+                async function (position) {
+
+                    try {
+                        const response = await fetch(
+                            {{ url_for('scan', student_id=student_id)|tojson }},
+                            {
+                                method: 'POST',
+
+                                headers: {
+                                    'Content-Type': 'application/json'
+                                },
+
+                                body: JSON.stringify({
+                                    token: {{ token|tojson }},
+                                    latitude: position.coords.latitude,
+                                    longitude: position.coords.longitude
+                                })
+                            }
+                        );
+
+                        const data = await response.json();
+
+                        status.textContent =
+                            data.message || 'Attendance request failed.';
+
+                        if (!data.success) {
+                            button.disabled = false;
+                        }
+
+                    } catch (error) {
+
+                        status.textContent =
+                            'Could not contact GeoAttend. Try again.';
+
+                        button.disabled = false;
+                    }
+                },
+
+                function (error) {
+
+                    status.textContent =
+                        'Location unavailable. Allow location permission and try again.';
+
+                    button.disabled = false;
+                },
+
+                {
+                    enableHighAccuracy: true,
+                    timeout: 15000,
+                    maximumAge: 0
+                }
+            );
+        });
+    </script>
+
+</body>
+</html>
+'''
+
+
+@app.route('/attendance/<token>')
+def attendance_page(token):
+    token = extract_token(token)
+
+    if token is None:
+        return 'Invalid QR code.', 404
+
+    if not student_logged_in():
+        session['pending_attendance'] = token
+        return redirect(url_for('login'))
+
+    return render_template_string(
+        ATTENDANCE_HTML,
+        token=token,
+        student_id=session['student_id']
     )
 
-    if teacher_id is None:
-        return 'Please select a teacher.', 400
 
-    return redirect(
-        url_for(
-            'teacher_login_page',
-            teacher_id=teacher_id
-        )
-    )
-
-
-# ---------------------------------------------------------
-# TEACHER LOGIN PAGE
-# ---------------------------------------------------------
-
-@app.route('/teacher-login')
-def teacher_login_page():
-
-    teacher_id = request.args.get(
-        'teacher_id',
-        type=int
-    )
-
-    if teacher_id is None:
-        return redirect(
-            url_for('select_user_page')
-        )
-
-    return render_template(
-        'teacher-login.html',
-        teacher_id=teacher_id
-    )
-
-
-# ---------------------------------------------------------
-# TEACHER LOGIN SUBMIT
-# ---------------------------------------------------------
-
-@app.route(
-    '/teacher-login-submit',
-    methods=['POST']
-)
-def teacher_login_submit():
-
-    teacher_id = request.form.get(
-        'teacher_id',
-        type=int
-    )
-
-    email = request.form.get(
-        'email',
-        ''
-    ).strip()
-
-    password = request.form.get(
-        'password',
-        ''
-    )
-
-    if teacher_id is None or not email or not password:
-
-        return (
-            'Please enter your email and password.',
-            400
-        )
-
-    # Temporary page-flow test.
-    # Real account checking is not connected yet.
-
-    return redirect(
-        url_for(
-            'teacher_page',
-            teacher_id=teacher_id
-        )
-    )
-
-
-# ---------------------------------------------------------
-# TEACHER DASHBOARD
-# ---------------------------------------------------------
+# LECTURER DASHBOARD
 
 @app.route(
     '/teacher/<int:teacher_id>',
     methods=['GET', 'POST']
 )
 def teacher_page(teacher_id):
+    if not lecturer_logged_in(teacher_id):
+        return redirect(url_for('login'))
 
-    subjects = db.teacher_subjects(
-        teacher_id
-    )
+    subjects = db.teacher_subjects(teacher_id)
 
     token = None
     attendance_url = None
+    session_subject = None
 
     selected_subject = request.form.get(
         'subject_id',
@@ -354,12 +415,6 @@ def teacher_page(teacher_id):
         default=1,
         type=int
     )
-
-    session_subject = None
-
-    # -----------------------------------------------------
-    # START QR ATTENDANCE SESSION
-    # -----------------------------------------------------
 
     if request.method == 'POST':
 
@@ -373,10 +428,6 @@ def teacher_page(teacher_id):
             type=int
         )
 
-        # Get teacher location from the form
-        latitude = request.form.get('latitude')
-        longitude = request.form.get('longitude')
-
         valid_subject_ids = [
             subject['subject_id']
             for subject in subjects
@@ -386,35 +437,31 @@ def teacher_page(teacher_id):
             subject_id not in valid_subject_ids
             or week not in range(1, 14)
         ):
-            return (
-                'Invalid subject or week',
-                400
+            return 'Invalid subject or week.', 400
+
+        try:
+            latitude = float(
+                request.form.get('latitude')
             )
 
-        # Make sure teacher location was received
-        try:
-            latitude = float(latitude)
-            longitude = float(longitude)
+            longitude = float(
+                request.form.get('longitude')
+            )
+
         except (TypeError, ValueError):
             return (
                 'Location is required to start attendance.',
                 400
             )
 
-        # Basic coordinate validation
         if not (
             -90 <= latitude <= 90
             and -180 <= longitude <= 180
         ):
-            return (
-                'Invalid teacher location.',
-                400
-            )
+            return 'Invalid teacher location.', 400
 
-        # Generate unique QR token
         token = secrets.token_urlsafe(16)
 
-        # Create/start session and save teacher location
         db.start_session(
             subject_id,
             week,
@@ -423,21 +470,21 @@ def teacher_page(teacher_id):
             longitude
         )
 
+        public_url = os.environ.get(
+            'GEOATTEND_PUBLIC_URL',
+            'https://geoattend.site'
+        ).rstrip('/')
+
         attendance_url = (
-            f"{request.host_url.rstrip('/')}"
-            f"/attendance/{token}"
+            public_url
+            + url_for('attendance_page', token=token)
         )
 
-        # Find the selected subject
         session_subject = next(
             subject
             for subject in subjects
             if subject['subject_id'] == subject_id
         )
-
-    # -----------------------------------------------------
-    # LOAD ATTENDANCE TABLE
-    # -----------------------------------------------------
 
     grids = {}
     students = {}
@@ -446,17 +493,13 @@ def teacher_page(teacher_id):
 
         subject_id = subject['subject_id']
 
-        grids[subject_id] = (
-            db.attendance_grid(subject_id)
+        grids[subject_id] = db.attendance_grid(
+            subject_id
         )
 
-        students[subject_id] = (
-            db.class_students(subject_id)
+        students[subject_id] = db.class_students(
+            subject_id
         )
-
-    # -----------------------------------------------------
-    # DISPLAY TEACHER DASHBOARD
-    # -----------------------------------------------------
 
     return render_template(
         'teacher.html',
@@ -471,9 +514,7 @@ def teacher_page(teacher_id):
     )
 
 
-# =========================================================
-# MANUAL ATTENDANCE UPDATE
-# =========================================================
+# MANUAL ATTENDANCE
 
 @app.route(
     '/attendance/update',
@@ -481,72 +522,66 @@ def teacher_page(teacher_id):
 )
 def update_attendance():
 
-    # Receive JSON sent by teacher.js
+    if not lecturer_logged_in():
+        return jsonify(
+            success=False,
+            message='Lecturer login required.'
+        ), 403
+
     data = request.get_json(silent=True)
 
     if not isinstance(data, dict):
-
         return jsonify(
             success=False,
             message='Invalid request.'
         ), 400
 
-    # -----------------------------------------------------
-    # GET ATTENDANCE INFORMATION
-    # -----------------------------------------------------
-
-    student_id = data.get('student_id')
-    subject_id = data.get('subject_id')
-    week = data.get('week')
-    status = data.get('status', '')
-
-    # Convert IDs/week into integers
-
     try:
-
-        student_id = int(student_id)
-        subject_id = int(subject_id)
-        week = int(week)
+        student_id = int(data.get('student_id'))
+        subject_id = int(data.get('subject_id'))
+        week = int(data.get('week'))
 
     except (TypeError, ValueError):
-
         return jsonify(
             success=False,
             message='Invalid student, subject or week.'
         ), 400
 
-    # -----------------------------------------------------
-    # VALIDATE WEEK
-    # -----------------------------------------------------
+    status = data.get('status', '')
 
     if week not in range(1, 14):
-
         return jsonify(
             success=False,
             message='Invalid week.'
         ), 400
 
-    # -----------------------------------------------------
-    # VALIDATE ATTENDANCE STATUS
-    # -----------------------------------------------------
-
-    allowed_statuses = [
+    allowed_statuses = (
         '',
         'PRESENT',
         'ABSENT',
         'LATE'
-    ]
+    )
 
     if status not in allowed_statuses:
-
         return jsonify(
             success=False,
             message='Invalid attendance status.'
         ), 400
 
-    # -----------------------------------------------------
-    # UPDATE DATABASE
-    # -----------------------------------------------------
+    lecturer_subjects = db.teacher_subjects(
+        session['lecturer_id']
+    )
+
+    valid_subject_ids = [
+        subject['subject_id']
+        for subject in lecturer_subjects
+    ]
+
+    if subject_id not in valid_subject_ids:
+        return jsonify(
+            success=False,
+            message='You do not teach this class.'
+        ), 403
 
     success = db.update_attendance(
         student_id,
@@ -556,18 +591,10 @@ def update_attendance():
     )
 
     if not success:
-
         return jsonify(
             success=False,
-            message=(
-                'No attendance session exists '
-                'for this week.'
-            )
+            message='No attendance session exists for this week.'
         ), 400
-
-    # -----------------------------------------------------
-    # SUCCESS
-    # -----------------------------------------------------
 
     return jsonify(
         success=True,
@@ -575,12 +602,9 @@ def update_attendance():
     )
 
 
-# =========================================================
-# RUN FLASK APPLICATION
-# =========================================================
+# RUN APPLICATION
 
 if __name__ == '__main__':
-
     app.run(
         host='0.0.0.0',
         port=5007,

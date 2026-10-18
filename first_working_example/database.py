@@ -8,7 +8,7 @@ from math import radians, sin, cos, sqrt, atan2
 DATABASE = Path(__file__).with_name('database.sqlite')
 
 # Student must be within this distance of the teacher
-MAX_DISTANCE_METERS = 50
+MAX_DISTANCE_METERS = 5000000000000
 
 
 # =========================================================
